@@ -4,7 +4,7 @@ use axum::extract;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use maud::html;
-use sqlx::query;
+use sqlx::{query, query_scalar};
 
 use crate::extract::auth::User;
 use crate::extract::pagination::RawPagination;
@@ -35,6 +35,10 @@ async fn handler(
 	let limit = pagination.limit();
 	let offset = pagination.offset();
 
+	let num_problems = query_scalar!(r#"select count(*) as "count: i64" from problems"#)
+		.fetch_one(&state.database)
+		.await
+		.map_err(error::internal(user.as_ref()))?;
 	let problems = query!(
 		r#"select id as "id!", name, (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64" from problems order by problems.id limit ? offset ?"#, limit, offset,
 	).fetch_all(&state.database).await.map_err(error::internal(user.as_ref()))?;
@@ -64,6 +68,7 @@ async fn handler(
 				}
 			} } }
 		}
+		(pagination.make_pager(num_problems))
 	};
 
 	Ok(page("Problems", user.as_ref(), &body).into_response())
