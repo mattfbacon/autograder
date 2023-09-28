@@ -89,7 +89,7 @@ async fn handler(
 	};
 
 	let Some(problem) = query!(
-		r#"select name, description, creation_time as "creation_time: Timestamp", (select display_name from users where users.id = problems.created_by) as created_by, (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", tests from problems where id = ?"#,
+		r#"select name, description, problems.creation_time as "creation_time: Timestamp", users.id as "created_by_id!", users.display_name as created_by_name, (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", tests from problems inner join users on problems.created_by = users.id where problems.id = ?"#,
 		problem_id,
 	)
 	.fetch_optional(&state.database)
@@ -112,7 +112,7 @@ async fn handler(
 	let body = html! {
 		h1 { "Problem " (problem_id) ": " (problem.name) }
 		p { b {
-			"Created by " (problem.created_by) " on " (problem.creation_time) " | " (problem.num_submissions) " submission" (s(problem.num_submissions))
+			"Created by " a href={"/users/"(problem.created_by_id)} { (problem.created_by_name) } " on " (problem.creation_time) " | " (problem.num_submissions) " submission" (s(problem.num_submissions))
 			@if let Some(pass_rate) = pass_rate {
 				", " (pass_rate) "% correct"
 			}
