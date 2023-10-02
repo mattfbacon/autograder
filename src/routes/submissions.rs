@@ -86,7 +86,7 @@ async fn handler(
 		|| (user.id == submission.submitter)
 	});
 	if !can_access {
-		return Err(error::not_found(user.as_ref()).await);
+		return Err(error::fake_not_found(user.as_ref()).await);
 	}
 
 	let body = html! {

@@ -7,7 +7,6 @@ use maud::html;
 use serde::Deserialize;
 use sqlx::query;
 
-use crate::error::ErrorResponse;
 use crate::extract::auth::User;
 use crate::model::{PermissionLevel, UserId};
 use crate::template::page;
@@ -40,11 +39,7 @@ async fn delete(
 	extract::Path(req_user_id): extract::Path<UserId>,
 ) -> Result<Response, Response> {
 	if permission_level(login_user.as_ref(), req_user_id) < UserEditPermissionLevel::Edit {
-		return Err(
-			ErrorResponse::not_found()
-				.await
-				.into_response(login_user.as_ref()),
-		);
+		return Err(error::fake_not_found(login_user.as_ref()).await);
 	}
 
 	query!("delete from users where id = ?", req_user_id,)
@@ -67,11 +62,7 @@ async fn change_permission(
 	extract::Form(post): extract::Form<ChangePermissionForm>,
 ) -> Result<Response, Response> {
 	if permission_level(login_user.as_ref(), req_user_id) < UserEditPermissionLevel::Admin {
-		return Err(
-			ErrorResponse::not_found()
-				.await
-				.into_response(login_user.as_ref()),
-		);
+		return Err(error::fake_not_found(login_user.as_ref()).await);
 	}
 
 	query!(
@@ -98,11 +89,7 @@ async fn rename(
 	extract::Form(post): extract::Form<RenameForm>,
 ) -> Result<Response, Response> {
 	if permission_level(login_user.as_ref(), req_user_id) < UserEditPermissionLevel::Edit {
-		return Err(
-			ErrorResponse::not_found()
-				.await
-				.into_response(login_user.as_ref()),
-		);
+		return Err(error::fake_not_found(login_user.as_ref()).await);
 	}
 
 	query!(

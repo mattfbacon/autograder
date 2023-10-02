@@ -1,3 +1,5 @@
+use std::future::Future;
+
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use maud::html;
@@ -69,6 +71,19 @@ pub fn internal<T: std::fmt::Debug>(user: Option<&User>) -> impl '_ + FnOnce(T) 
 
 pub async fn not_found(user: Option<&User>) -> Response {
 	ErrorResponse::not_found().await.into_response(user)
+}
+
+#[track_caller]
+pub fn fake_not_found(user: Option<&User>) -> impl Future<Output = Response> + '_ {
+	let location = std::panic::Location::caller();
+	async move {
+		tracing::warn!(
+			%location,
+			?user,
+			"user tried to access page without permission; pretending it doesn't exist",
+		);
+		not_found(user).await
+	}
 }
 
 pub async fn not_found_handler(user: Option<User>) -> Response {
