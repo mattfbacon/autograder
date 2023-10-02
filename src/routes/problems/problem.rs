@@ -19,10 +19,12 @@ use crate::time::{now, Timestamp};
 use crate::util::{deserialize_textarea, s};
 use crate::{error, State};
 
-fn can_edit(user: Option<&User>, problem_created_by: UserId) -> bool {
+fn can_edit(user: Option<&User>, problem_created_by: Option<UserId>) -> bool {
 	user.is_some_and(|user| {
 		user.permission_level >= PermissionLevel::Admin
-			|| (user.permission_level >= PermissionLevel::ProblemAuthor && user.id == problem_created_by)
+			|| problem_created_by.is_some_and(|problem_created_by| {
+				user.permission_level >= PermissionLevel::ProblemAuthor && user.id == problem_created_by
+			})
 	})
 }
 
@@ -166,7 +168,7 @@ async fn handler(
 	};
 
 	let Some(problem) = query!(
-		r#"select name, description, problems.creation_time as "creation_time: Timestamp", users.id as "created_by_id!", users.display_name as created_by_name, (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", tests as "tests: Tests" from problems inner join users on problems.created_by = users.id where problems.id = ?"#,
+		r#"select name, description, problems.creation_time as "creation_time: Timestamp", users.id as "created_by_id?", users.display_name as "created_by_name?", (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", tests as "tests: Tests" from problems left join users on problems.created_by = users.id where problems.id = ?"#,
 		problem_id,
 	)
 	.fetch_optional(&state.database)
@@ -188,7 +190,15 @@ async fn handler(
 			}
 		}
 		p { b {
-			"Created by " a href={"/users/"(problem.created_by_id)} { (problem.created_by_name) } " on " (problem.creation_time) " | " (problem.num_submissions) " submission" (s(problem.num_submissions))
+			"Created "
+			@if let Some(created_by_id) = problem.created_by_id {
+				@if let Some(created_by_name) = &problem.created_by_name {
+					"by " a href={"/users/"(created_by_id)} { (created_by_name) } " "
+				}
+			}
+			"on " (problem.creation_time)
+			" | "
+			(problem.num_submissions) " submission" (s(problem.num_submissions))
 			@if let Some(pass_rate) = pass_rate {
 				", " (pass_rate) "% correct"
 			}

@@ -76,8 +76,10 @@ async fn handler(
 		// Administrator.
 		user.permission_level >= PermissionLevel::Admin
 		// Problem author who created the problem.
-		|| (user.permission_level >= PermissionLevel::ProblemAuthor
-			&& user.id == submission.problem_author)
+		|| submission.problem_author.is_some_and(|problem_author| {
+			user.permission_level >= PermissionLevel::ProblemAuthor
+			&& user.id == problem_author
+		})
 		// User who made this submission.
 		|| (user.id == submission.submitter)
 	});

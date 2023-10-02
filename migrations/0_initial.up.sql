@@ -7,14 +7,14 @@ create table problems (
 	visible integer not null,
 	tests text not null,
 	creation_time integer not null,
-	created_by integer not null references users
+	created_by integer references users on delete set null
 ) strict;
 
 create table submissions (
 	id integer primary key,
 	code text not null,
-	for_problem integer not null references problems,
-	submitter integer not null references users,
+	for_problem integer not null references problems on delete cascade,
+	submitter integer not null references users on delete cascade,
 	language integer not null,
 	submission_time integer not null,
 	result text
@@ -34,5 +34,5 @@ create table users (
 
 create table sessions (
 	token blob not null primary key,
-	user integer unique not null references users
+	user integer unique not null references users on delete cascade
 ) without rowid, strict;
