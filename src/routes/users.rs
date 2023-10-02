@@ -161,7 +161,7 @@ async fn handler(
 
 	let title = format!("(User) {}", req_user.display_name);
 	let page = page(&title, login_user.as_ref(), &body);
-	Ok(page.into_response())
+	Ok(page.custom_title().into_response())
 }
 
 pub fn router() -> axum::Router<Arc<State>> {

@@ -59,7 +59,6 @@ async fn handler(
 
 	let status = error.as_ref().map_or(StatusCode::OK, |error| error.status);
 	let body = html! {
-		h1 { "Log In" }
 		form method="post" {
 			label for="username" { "Username" input id="username" name="username" type="text" autocomplete="username" required; }
 			label for="password" { "Password" input id="password" name="password" type="password" autocomplete="current-password" required; }

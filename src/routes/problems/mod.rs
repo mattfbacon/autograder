@@ -47,7 +47,6 @@ async fn handler(
 		@if user.as_ref().is_some_and(|user| user.permission_level >= PermissionLevel::ProblemAuthor) {
 			a href="/problems/new" { "Create a new problem" }
 		}
-		h1 { "Problems" }
 		table {
 			thead { tr {
 				th { "#" }

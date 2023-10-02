@@ -15,10 +15,10 @@ async fn handler(
 	user: Option<User>,
 ) -> Response {
 	let body = html! {
-		h1 { "Versions and Compile Flags" }
+		h2 { "Versions and Compile Flags" }
 		@for (i, version) in state.sandbox.versions().iter().enumerate() {
 			@let language = Language::from_repr(i.try_into().unwrap()).unwrap();
-			h2 { (language.name()) }
+			h3 { (language.name()) }
 			pre { code { (version) } }
 		}
 	};

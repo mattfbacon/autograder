@@ -32,7 +32,6 @@ async fn submissions(
 	let submissions = query!(r#"select submissions.id as submission_id, problems.id as problem_id, problems.name as problem_name, users.id as submitter_id, users.display_name as submitter_name, submission_time as "submission_time: Timestamp", result as "result: SimpleTestResponse" from submissions inner join problems on submissions.for_problem = problems.id inner join users on submissions.submitter = users.id order by submissions.id desc limit ? offset ?"#, limit, offset).fetch_all(&state.database).await.map_err(error::internal(Some(&user)))?;
 
 	let body = html! {
-		h1 { "Submissions" }
 		table {
 			thead { tr {
 				th { "ID" }
@@ -52,7 +51,7 @@ async fn submissions(
 		(pagination.make_pager(num_submissions))
 	};
 
-	Ok(page("Submission List", Some(&user), &body).into_response())
+	Ok(page("Submissions", Some(&user), &body).into_response())
 }
 
 async fn users(
@@ -76,7 +75,6 @@ async fn users(
 			.map_err(error::internal(Some(&user)))?;
 
 	let body = html! {
-		h1 { "Users" }
 		table {
 			thead { tr {
 				th { "ID" }
@@ -96,7 +94,7 @@ async fn users(
 		(pagination.make_pager(num_users))
 	};
 
-	Ok(page("User List", Some(&user), &body).into_response())
+	Ok(page("Users", Some(&user), &body).into_response())
 }
 
 async fn admin(Admin(user): Admin) -> Response {

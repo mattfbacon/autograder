@@ -116,7 +116,9 @@ async fn handler(
 		pre { code { (submission.code) } }
 	};
 
-	Ok(page("Submission", user.as_ref(), &body).into_response())
+	let title = format!("Submission for Problem {}", submission.problem_id);
+	let page = page(&title, user.as_ref(), &body);
+	Ok(page.custom_title().into_response())
 }
 
 pub fn router() -> axum::Router<Arc<State>> {

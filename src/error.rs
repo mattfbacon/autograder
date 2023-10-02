@@ -54,7 +54,7 @@ impl ErrorResponse {
 			h1 { (self.status.as_str()) " " (mnemonic) }
 			p.preserve-space { (&self.message) }
 		};
-		(self.status, page("Error!", user, &body)).into_response()
+		(self.status, page("Error!", user, &body).custom_title()).into_response()
 	}
 
 	pub fn into_response_in_extractor(self, parts: &mut axum::http::request::Parts) -> Response {

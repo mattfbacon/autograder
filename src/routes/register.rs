@@ -81,7 +81,6 @@ async fn handler(
 
 	let status = error.as_ref().map_or(StatusCode::OK, |error| error.status);
 	let body = html! {
-		h1 { "Register" }
 		form method="post" {
 			label { "Username" input name="username" type="text" required; }
 			label { "Display name" input name="display_name" type="text" required; }

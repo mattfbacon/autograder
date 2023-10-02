@@ -87,7 +87,6 @@ async fn handler(
 	let pass_rate = pass_rate(problem.num_submissions, problem.num_correct_submissions);
 
 	let body = html! {
-		h1 { "Problem " (problem_id) ": " (problem.name) }
 		p { b {
 			"Created by " a href={"/users/"(problem.created_by_id)} { (problem.created_by_name) } " on " (problem.creation_time) " | " (problem.num_submissions) " submission" (s(problem.num_submissions))
 			@if let Some(pass_rate) = pass_rate {
@@ -119,7 +118,7 @@ async fn handler(
 		}
 	};
 
-	let title = format!("Problem {problem_id}");
+	let title = format!("Problem {problem_id}: {}", problem.name);
 	let mut page = page(&title, user.as_ref(), &body);
 	let status = error.as_ref().map_or(StatusCode::OK, |error| error.status);
 	if let Some(error) = &error {

@@ -25,6 +25,7 @@ struct Banner<'a> {
 
 pub struct Page<'a> {
 	title: &'a str,
+	add_title: bool,
 	user: Option<&'a User>,
 	body: &'a Markup,
 	banner: Option<Banner<'a>>,
@@ -61,6 +62,13 @@ impl<'a> Page<'a> {
 		}
 	}
 
+	pub fn custom_title(self) -> Self {
+		Self {
+			add_title: false,
+			..self
+		}
+	}
+
 	pub fn to_html(&self) -> Markup {
 		html! {
 			(maud::DOCTYPE);
@@ -78,7 +86,12 @@ impl<'a> Page<'a> {
 					@if let Some(banner) = &self.banner {
 						header class={"banner banner-" (banner.kind.as_str())} { (banner.message) }
 					}
-					main { (self.body) }
+					main {
+						@if self.add_title {
+							h1 { (self.title) }
+						}
+						(self.body)
+					}
 					footer {
 						p { "It is currently " (now()) "." }
 						(FOOTER)
@@ -92,6 +105,7 @@ impl<'a> Page<'a> {
 pub fn page<'a>(title: &'a str, user: Option<&'a User>, body: &'a Markup) -> Page<'a> {
 	Page {
 		title,
+		add_title: true,
 		user,
 		body,
 		banner: None,
