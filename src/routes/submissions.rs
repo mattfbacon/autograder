@@ -19,7 +19,7 @@ pub async fn do_judge(
 	submission_id: SubmissionId,
 ) -> Result<Response, ErrorResponse> {
 	let Some(submission) = query!(
-		r#"select code, language as "language: Language", problems.memory_limit, problems.time_limit, problems.tests from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?"#,
+		r#"select code, language as "language: Language", problems.memory_limit as "memory_limit: u32", problems.time_limit as "time_limit: u32", problems.tests from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?"#,
 		submission_id
 	)
 	.fetch_optional(&state.database)
@@ -29,16 +29,12 @@ pub async fn do_judge(
 		return Err(ErrorResponse::not_found().await);
 	};
 
-	// These intentionally convert negative values to `u32::MAX`, because those values are interpreted to mean "no limit".
-	let memory_limit = submission.memory_limit.try_into().unwrap_or(u32::MAX);
-	let time_limit = submission.time_limit.try_into().unwrap_or(u32::MAX);
-
 	let response = state
 		.sandbox
 		.test(&Test {
 			language: submission.language,
-			memory_limit,
-			time_limit,
+			memory_limit: submission.memory_limit,
+			time_limit: submission.time_limit,
 			code: &submission.code,
 			tests: &submission.tests,
 		})
