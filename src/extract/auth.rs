@@ -240,6 +240,7 @@ macro_rules! permission_extractor {
 					tracing::warn!(
 						?user,
 						?required_level,
+						?parts.uri,
 						"user tried to access page without required permission level; pretending it doesn't exist",
 					);
 					Err(crate::error::not_found(Some(&user)).await)
