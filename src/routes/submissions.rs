@@ -36,7 +36,7 @@ async fn handler(
 	}
 
 	let body = html! {
-		h1 { "Submission for " a href={"/problems/"(submission.problem_id)} { "Problem " (submission.problem_id) ": " (submission.problem_name) } }
+		h1 { "Submission for " a href={"/problem/"(submission.problem_id)} { "Problem " (submission.problem_id) ": " (submission.problem_name) } }
 		p { b { "By " (submission.submitter_name) " | Submitted at " (submission.submission_time) } }
 		@match &submission.result {
 			TestResponse::Ok(cases) => {

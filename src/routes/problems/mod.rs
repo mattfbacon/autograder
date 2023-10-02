@@ -57,7 +57,7 @@ async fn handler(
 			} }
 			tbody { @for problem in &problems { tr {
 				td { (problem.id) }
-				td { a href={ "/problems/" (problem.id) } { (problem.name) } }
+				td { a href={ "/problem/" (problem.id) } { (problem.name) } }
 				td { (problem.num_submissions) }
 				td title={ (problem.num_correct_submissions) " correct submission" (s(problem.num_correct_submissions)) } {
 					@if let Some(pass_rate) = pass_rate(problem.num_submissions, problem.num_correct_submissions) {
@@ -77,7 +77,8 @@ async fn handler(
 pub fn router() -> axum::Router<Arc<State>> {
 	let router = axum::Router::new()
 		.route("/", get(handler))
-		.merge(new::router())
-		.merge(problem::router());
-	axum::Router::new().nest("/problems", router)
+		.merge(new::router());
+	axum::Router::new()
+		.nest("/problems", router)
+		.nest("/problem", problem::router())
 }

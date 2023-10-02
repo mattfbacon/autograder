@@ -58,7 +58,7 @@ async fn handler(
 
 	let error = if let Some(post) = post {
 		match handle_post(&state, &user, post).await {
-			Ok(id) => return Redirect::to(&format!("/problems/{id}")).into_response(),
+			Ok(id) => return Redirect::to(&format!("/problem/{id}")).into_response(),
 			Err(error) => Some(error),
 		}
 	} else {

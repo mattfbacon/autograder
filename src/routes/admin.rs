@@ -43,7 +43,7 @@ async fn submissions(
 			} }
 			tbody { @for submission in &submissions { tr {
 				td { (submission.submission_id) }
-				td { a href={"/problems/"(submission.problem_id)} { (submission.problem_name) } }
+				td { a href={"/problem/"(submission.problem_id)} { (submission.problem_name) } }
 				td { a href={"/users/"(submission.submitter_id)} { (submission.submitter_name) } }
 				td { (submission.submission_time) }
 				td { a href={"/submission/"(submission.submission_id)} { (submission.result.as_str()) } }
