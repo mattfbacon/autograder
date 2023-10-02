@@ -17,7 +17,7 @@ create table submissions (
 	submitter integer not null references users,
 	language integer not null,
 	submission_time integer not null,
-	result text not null
+	result text
 ) strict;
 
 create index submissions_problem on submissions(for_problem);

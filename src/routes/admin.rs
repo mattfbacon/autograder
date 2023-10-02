@@ -46,7 +46,7 @@ async fn submissions(
 				td { a href={"/problem/"(submission.problem_id)} { (submission.problem_name) } }
 				td { a href={"/users/"(submission.submitter_id)} { (submission.submitter_name) } }
 				td { (submission.submission_time) }
-				td { a href={"/submission/"(submission.submission_id)} { (submission.result.as_str()) } }
+				td { a href={"/submission/"(submission.submission_id)} { (submission.result.map_or("Not yet judged", SimpleTestResponse::as_str)) } }
 			} } }
 		}
 		(pagination.make_pager(num_submissions))

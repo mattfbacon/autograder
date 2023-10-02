@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract;
 use axum::http::StatusCode;
-use axum::response::{IntoResponse, Redirect, Response};
+use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use maud::html;
 use serde::Deserialize;
@@ -13,7 +13,6 @@ use crate::error::ErrorResponse;
 use crate::extract::auth::User;
 use crate::extract::if_post::IfPost;
 use crate::model::{Language, ProblemId, SubmissionId, Tests};
-use crate::sandbox::Test;
 use crate::template::{page, BannerKind};
 use crate::time::{now, Timestamp};
 use crate::util::{deserialize_textarea, s};
@@ -26,23 +25,19 @@ struct Post {
 	code: String,
 }
 
+fn can_edit(user: Option<&User>, problem_created_by: UserId) -> bool {
+	user.is_some_and(|user| {
+		user.permission_level >= PermissionLevel::Admin
+			|| (user.permission_level >= PermissionLevel::ProblemAuthor && user.id == problem_created_by)
+	})
+}
+
 async fn handle_post(
 	state: &State,
 	user: Option<&User>,
 	problem_id: ProblemId,
 	post: &Post,
 ) -> Result<SubmissionId, ErrorResponse> {
-	let Some(problem) = query!(
-		"select memory_limit, time_limit, tests from problems where id = ?",
-		problem_id,
-	)
-	.fetch_optional(&state.database)
-	.await
-	.map_err(ErrorResponse::internal)?
-	else {
-		return Err(ErrorResponse::not_found().await);
-	};
-
 	let Some(user) = user else {
 		return Err(ErrorResponse {
 			status: StatusCode::UNAUTHORIZED,
@@ -50,23 +45,8 @@ async fn handle_post(
 		});
 	};
 
-	let memory_limit = problem.memory_limit.try_into().unwrap_or(u32::MAX);
-	let time_limit = problem.time_limit.try_into().unwrap_or(u32::MAX);
-
-	let response = state
-		.sandbox
-		.test(&Test {
-			language: post.language,
-			memory_limit,
-			time_limit,
-			code: &post.code,
-			tests: &problem.tests,
-		})
-		.await
-		.map_err(ErrorResponse::internal)?;
-
 	let now = now();
-	let submission_id = query_scalar!("insert into submissions (code, for_problem, submitter, language, submission_time, result) values (?, ?, ?, ?, ?, ?) returning id", post.code, problem_id, user.id, post.language, now, response).fetch_one(&state.database).await.map_err(ErrorResponse::internal)?;
+	let submission_id = query_scalar!("insert into submissions (code, for_problem, submitter, language, submission_time, result) values (?, ?, ?, ?, ?, null) returning id", post.code, problem_id, user.id, post.language, now).fetch_one(&state.database).await.map_err(ErrorResponse::internal)?;
 
 	Ok(submission_id)
 }
@@ -80,7 +60,10 @@ async fn handler(
 	let error = if let Some(extract::Form(post)) = post {
 		match handle_post(&state, user.as_ref(), problem_id, &post).await {
 			Ok(submission_id) => {
-				return Ok(Redirect::to(&format!("/submission/{submission_id}")).into_response())
+				match crate::routes::submissions::do_judge(&state, submission_id).await {
+					Ok(response) => return Ok(response),
+					Err(error) => Some(error),
+				}
 			}
 			Err(error) => Some(error),
 		}
