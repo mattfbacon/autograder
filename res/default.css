@@ -131,3 +131,10 @@ th, td {
 table {
 	border-collapse: collapse;
 }
+
+.row {
+	display: flex;
+	flex-direction: row;
+	gap: var(--space-xs);
+	align-items: center;
+}
