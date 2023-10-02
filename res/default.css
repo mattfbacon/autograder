@@ -13,6 +13,9 @@
 	--color-error: #d33;
 	--on-color-error: #fff;
 
+	--color-info: #38d;
+	--on-color-info: #fff;
+
 	--space-xs: .4rem;
 	--space-s: .7rem;
 	--space-m: 1rem;
@@ -85,6 +88,11 @@ main {
 .banner-error {
 	background: var(--color-error);
 	color: var(--on-color-error);
+}
+
+.banner-info {
+	background: var(--color-info);
+	color: var(--on-color-info);
 }
 
 form {

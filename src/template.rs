@@ -7,13 +7,22 @@ use crate::time::now;
 
 #[derive(Debug, Clone, Copy)]
 pub enum BannerKind {
+	Info,
 	Error,
 }
 
 impl BannerKind {
 	fn as_str(self) -> &'static str {
 		match self {
+			Self::Info => "info",
 			Self::Error => "error",
+		}
+	}
+
+	fn name(self) -> &'static str {
+		match self {
+			Self::Info => "Info",
+			Self::Error => "Error",
 		}
 	}
 }
@@ -84,7 +93,9 @@ impl<'a> Page<'a> {
 				body {
 					(navbar(self.user))
 					@if let Some(banner) = &self.banner {
-						header class={"banner banner-" (banner.kind.as_str())} { (banner.message) }
+						header class={"banner banner-" (banner.kind.as_str())} {
+							(banner.kind.name()) ": " (banner.message)
+						}
 					}
 					main {
 						@if self.add_title {
