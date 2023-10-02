@@ -89,7 +89,7 @@ async fn handler(
 			}
 			label {
 				"Tests"
-				textarea required name="tests" placeholder=(EXAMPLE_TESTS) rows="8" { (post.map_or("", |post| &post.tests)) }
+				textarea required name="tests" placeholder=(EXAMPLE_TESTS) rows="10" { (post.map_or("", |post| &post.tests)) }
 			}
 			details {
 				summary { "How to write tests" }
