@@ -10,7 +10,7 @@ use sqlx::query_scalar;
 use crate::error::ErrorResponse;
 use crate::extract::auth::{ProblemAuthor, User};
 use crate::extract::if_post::IfPost;
-use crate::model::ProblemId;
+use crate::model::{ProblemId, Tests};
 use crate::template::{page, BannerKind};
 use crate::time::now;
 use crate::util::deserialize_textarea;
@@ -31,33 +31,18 @@ struct Form {
 	tests: String,
 }
 
-const EXAMPLE_TESTS: &str = "first input
+const EXAMPLE_TESTS: &str = "\
+first input
 --
 first output
 ===
 second input
 --
-second output";
-
-fn validate_tests(tests: &str) -> Result<(), String> {
-	if tests.is_empty() {
-		return Err("There are no tests".into());
-	}
-
-	for (i, test) in tests.split("\n===\n").enumerate() {
-		if test.split_once("\n--\n").is_none() {
-			return Err(format!(
-				"Test {} does not have the `--` separator for input and output.",
-				i + 1,
-			));
-		}
-	}
-
-	Ok(())
-}
+second output
+";
 
 async fn handle_post(state: &State, user: &User, post: &Form) -> Result<ProblemId, ErrorResponse> {
-	validate_tests(&post.tests).map_err(ErrorResponse::bad_request)?;
+	Tests::validate(&post.tests).map_err(|error| ErrorResponse::bad_request(error.to_string()))?;
 	let now = now();
 	let id = query_scalar!("insert into problems (name, description, time_limit, memory_limit, visible, tests, creation_time, created_by) values (?, ?, ?, ?, ?, ?, ?, ?) returning id", post.title, post.description, post.time_limit, post.memory_limit, post.visible, post.tests, now, user.id).fetch_one(&state.database).await.map_err(ErrorResponse::internal)?;
 	Ok(id)

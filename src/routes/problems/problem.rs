@@ -12,7 +12,7 @@ use super::pass_rate;
 use crate::error::ErrorResponse;
 use crate::extract::auth::User;
 use crate::extract::if_post::IfPost;
-use crate::model::{Language, ProblemId, SubmissionId};
+use crate::model::{Language, ProblemId, SubmissionId, Tests};
 use crate::sandbox::Test;
 use crate::template::{page, BannerKind};
 use crate::time::{now, Timestamp};
@@ -89,7 +89,7 @@ async fn handler(
 	};
 
 	let Some(problem) = query!(
-		r#"select name, description, problems.creation_time as "creation_time: Timestamp", users.id as "created_by_id!", users.display_name as created_by_name, (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", tests from problems inner join users on problems.created_by = users.id where problems.id = ?"#,
+		r#"select name, description, problems.creation_time as "creation_time: Timestamp", users.id as "created_by_id!", users.display_name as created_by_name, (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", tests as "tests: Tests" from problems inner join users on problems.created_by = users.id where problems.id = ?"#,
 		problem_id,
 	)
 	.fetch_optional(&state.database)
@@ -99,13 +99,7 @@ async fn handler(
 		return Err(error::not_found(user.as_ref()).await);
 	};
 
-	let (sample_input, sample_output) = problem
-		.tests
-		.split("\n===\n")
-		.next()
-		.unwrap()
-		.split_once("\n--\n")
-		.unwrap();
+	let (sample_input, sample_output) = problem.tests.cases().next().unwrap();
 
 	let pass_rate = pass_rate(problem.num_submissions, problem.num_correct_submissions);
 

@@ -1,3 +1,5 @@
+use std::fmt::{self, Debug, Formatter};
+
 use crate::util::{db_enum, enum_to_ty, sqlx_type_via};
 
 pub type Id = i64;
@@ -47,6 +49,79 @@ impl Language {
 			Self::Java => "Java",
 			Self::Rust => "Rust",
 		}
+	}
+}
+
+pub struct Tests {
+	inner: String,
+}
+
+const TEST_CASE_SEPARATOR: &str = "\n===\n";
+const TEST_IN_OUT_SEPARATOR: &str = "\n--\n";
+
+fn parse_tests(raw: &str) -> impl Iterator<Item = Option<(&str, &str)>> {
+	raw
+		.split(TEST_CASE_SEPARATOR)
+		.map(|case| case.split_once(TEST_IN_OUT_SEPARATOR))
+}
+
+sqlx_type_via!(Tests as String);
+
+impl Tests {
+	fn repr(&self) -> String {
+		self.inner.clone()
+	}
+
+	pub fn cases(&self) -> impl Iterator<Item = (&str, &str)> {
+		// We checked that they're valid when the type was constructed.
+		parse_tests(&self.inner).map(Option::unwrap)
+	}
+
+	pub fn validate(raw: &str) -> Result<(), TestsFromStrError> {
+		let mut tests = parse_tests(raw)
+			.enumerate()
+			.map(|(index, test)| test.ok_or(TestsFromStrError::InvalidTest { index }));
+		_ = tests.next().ok_or(TestsFromStrError::NoTests)?;
+		tests.try_for_each(|res| res.map(|_| ()))?;
+		Ok(())
+	}
+}
+
+impl Debug for Tests {
+	fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+		struct Helper<'a>(&'a str);
+
+		impl Debug for Helper<'_> {
+			fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+				f.debug_list()
+					.entries(parse_tests(self.0).map(Option::unwrap))
+					.finish()
+			}
+		}
+
+		formatter
+			.debug_struct("Tests")
+			.field("cases", &Helper(&self.inner))
+			.finish()
+	}
+}
+
+// These error messages are capitalized and include a period,
+// in conflict with the standard convention, because they will be shown to the user.
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+pub enum TestsFromStrError {
+	#[error("There are no tests.")]
+	NoTests,
+	#[error("Test {} is missing the separator {TEST_IN_OUT_SEPARATOR:?} between input and output.", index + 1)]
+	InvalidTest { index: usize },
+}
+
+impl TryFrom<String> for Tests {
+	type Error = TestsFromStrError;
+
+	fn try_from(inner: String) -> Result<Self, Self::Error> {
+		Self::validate(&inner)?;
+		Ok(Self { inner })
 	}
 }
 
