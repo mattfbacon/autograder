@@ -81,7 +81,7 @@ impl Tests {
 		let mut tests = parse_tests(raw)
 			.enumerate()
 			.map(|(index, test)| test.ok_or(TestsFromStrError::InvalidTest { index }));
-		_ = tests.next().ok_or(TestsFromStrError::NoTests)?;
+		tests.next().ok_or(TestsFromStrError::NoTests)??;
 		tests.try_for_each(|res| res.map(|_| ()))?;
 		Ok(())
 	}
