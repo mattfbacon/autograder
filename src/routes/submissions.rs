@@ -38,9 +38,10 @@ async fn handler(
 	let body = html! {
 		h1 { "Submission for " a href={"/problem/"(submission.problem_id)} { "Problem " (submission.problem_id) ": " (submission.problem_name) } }
 		p { b { "By " (submission.submitter_name) " | Submitted at " (submission.submission_time) } }
+		h2 { "Test Results" }
 		@match &submission.result {
 			TestResponse::Ok(cases) => {
-				h2 { "Cases" }
+				h3 { "Cases" }
 				ol {
 					@for case in cases {
 						li { (case.as_str()) }
@@ -48,7 +49,7 @@ async fn handler(
 				}
 			},
 			TestResponse::InvalidProgram(reason) => {
-				h2 { "Program was invalid" }
+				p { "Program was invalid." }
 				pre { code { (reason) } }
 			},
 		}
