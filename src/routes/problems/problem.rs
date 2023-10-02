@@ -194,10 +194,12 @@ async fn handler(
 			}
 		} }
 		p { (problem.description) }
-		h2 { "Sample input" }
-		pre { code { (sample_input) } }
-		h2 { "Sample output" }
-		pre { code { (sample_output) } }
+		div.sample-io {
+			h2 { "Sample input" }
+			pre { code { (sample_input) } }
+			h2 { "Sample output" }
+			pre { code { (sample_output) } }
+		}
 
 		hr;
 		h2 { "Submit your solution" }
