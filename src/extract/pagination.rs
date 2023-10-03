@@ -43,7 +43,7 @@ impl Pagination {
 	}
 
 	pub fn prev(self, num_entries: i64) -> Option<Self> {
-		if self.offset() >= num_entries {
+		if num_entries != 0 && self.offset() >= num_entries {
 			return Some(Self {
 				page: self
 					.num_pages(num_entries)
@@ -69,7 +69,7 @@ impl Pagination {
 	}
 
 	pub fn num_pages(self, num_entries: i64) -> i64 {
-		num_entries.div_ceil_p(self.limit())
+		num_entries.div_ceil_p(self.limit()).max(1)
 	}
 
 	pub fn limit(self) -> i64 {
