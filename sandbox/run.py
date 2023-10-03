@@ -1,8 +1,8 @@
 import cbor2
-from typing import Callable, Any, NoReturn
+import resource
 import subprocess
 import sys
-import resource
+from typing import Callable, Any, NoReturn
 
 
 # Common configuration.
@@ -13,7 +13,7 @@ VERSION_TIMEOUT = 10
 
 # Utilities.
 
-def write(path: str, contents: bytes):
+def write(path: str, contents: bytes) -> None:
 	with open(path, 'wb') as f:
 		f.write(contents)
 
@@ -25,7 +25,7 @@ def write_output(output: Any) -> NoReturn:
 	exit(0)
 
 # Return early and terminate the process if the process fails.
-def compile_run(args: list[str]):
+def compile_run(args: list[str]) -> None:
 	output = subprocess.run(args, timeout=COMPILATION_TIMEOUT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf8')
 	if output.returncode != 0:
 		reason = f'While running {repr(args)}:\n\n' + output.stdout
