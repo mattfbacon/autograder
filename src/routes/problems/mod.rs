@@ -67,6 +67,7 @@ async fn handler(
 				}
 			} } }
 		}
+		@if problems.is_empty() { p { "Nothing here..." } }
 		(pagination.make_pager(num_problems))
 	};
 

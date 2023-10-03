@@ -80,6 +80,7 @@ async fn submissions(
 				td { a href={"/submission/"(submission.submission_id)} { (submission.result.map_or("Not yet judged", SimpleTestResponse::as_str)) } }
 			} } }
 		}
+		@if submissions.is_empty() { p { "Nothing here..." } }
 		(pagination.make_pager(num_submissions))
 	};
 
@@ -123,6 +124,7 @@ async fn users(
 				td { (user.permission_level.name()) }
 			} } }
 		}
+		@if users.is_empty() { p { "Nothing here..." } }
 		(pagination.make_pager(num_users))
 	};
 
