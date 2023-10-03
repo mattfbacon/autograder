@@ -187,6 +187,9 @@ async fn handler(
 			div.row {
 				a href={"/problem/"(problem_id)"/edit"} { "Edit" }
 				form method="post" action={"/problem/"(problem_id)"/delete"} { input type="submit" value="Delete"; }
+				@if user.as_ref().is_some_and(|user| user.permission_level >= PermissionLevel::Admin) {
+					a href={"/admin/submissions?problem_id="(problem_id)} { "View submissions" }
+				}
 			}
 		}
 		p { b {
