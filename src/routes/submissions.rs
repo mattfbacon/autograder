@@ -94,10 +94,19 @@ async fn handler(
 		@match &submission.result {
 			Some(TestResponse::Ok(cases)) => {
 				h3 { "Cases" }
-				ol {
-					@for case in cases {
-						li { (case.as_str()) }
-					}
+				table {
+					thead { tr {
+						th { "#" }
+						th { "Result" }
+						th { "Time" }
+						th { "Memory usage" }
+					} }
+					tbody { @for (i, case) in cases.iter().enumerate() { tr {
+						td { (i + 1) }
+						td { (case.kind.as_str()) }
+						td { (case.time) " ms" }
+						td title={(case.memory_usage) " bytes"} { (humansize::format_size(case.memory_usage, humansize::DECIMAL)) }
+					} } }
 				}
 			},
 			Some(TestResponse::InvalidProgram(reason)) => {

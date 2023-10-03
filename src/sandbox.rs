@@ -16,14 +16,14 @@ enum Command<'a> {
 }
 
 #[derive(Debug, Clone, Copy, Deserialize)]
-pub enum CaseResult {
+pub enum CaseResultKind {
 	Correct,
 	Wrong,
 	RuntimeError,
 	Timeout,
 }
 
-impl CaseResult {
+impl CaseResultKind {
 	pub fn as_str(self) -> &'static str {
 		match self {
 			Self::Correct => "Correct ✅",
@@ -32,6 +32,15 @@ impl CaseResult {
 			Self::Timeout => "Timeout ⌛",
 		}
 	}
+}
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct CaseResult {
+	pub kind: CaseResultKind,
+	/// In bytes.
+	pub memory_usage: u32,
+	/// In milliseconds.
+	pub time: u32,
 }
 
 #[derive(Debug, Deserialize)]
