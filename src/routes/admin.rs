@@ -56,7 +56,10 @@ async fn submissions(
 				label { "Submitter name" input type="text" name="submitter" value=[search_submitter.as_deref()]; }
 				label { "Problem name" input type="text" name="problem" value=[search_problem.as_deref()]; }
 				label { "Problem ID" input type="number" name="problem_id" value=[search_problem_id]; }
-				input type="submit" value="Search";
+				div.row {
+					input type="submit" value="Search";
+					a href="/admin/submissions" { "Stop searching" }
+				}
 			}
 		}
 		table {
