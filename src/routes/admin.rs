@@ -8,7 +8,7 @@ use sqlx::{query, query_scalar};
 
 use crate::extract::auth::Admin;
 use crate::extract::pagination::RawPagination;
-use crate::model::{PermissionLevel, ProblemId, SimpleTestResponse};
+use crate::model::{Language, PermissionLevel, ProblemId, SimpleTestResponse};
 use crate::template::page;
 use crate::time::Timestamp;
 use crate::{error, State};
@@ -47,7 +47,7 @@ async fn submissions(
 		.await
 		.map_err(error::internal(Some(&user)))?;
 
-	let submissions = query!(r#"select submissions.id as submission_id, problems.id as problem_id, problems.name as problem_name, users.id as submitter_id, users.display_name as submitter_name, submission_time as "submission_time: Timestamp", result as "result: SimpleTestResponse" from submissions inner join problems on submissions.for_problem = problems.id inner join users on submissions.submitter = users.id where (?1 is null or submissions.submitter in (select id from users where instr(display_name, ?1) > 0)) and (?2 is null or submissions.for_problem in (select id from problems where instr(name, ?2) > 0)) and (?3 is null or submissions.for_problem = ?3) order by submissions.id desc limit ?4 offset ?5"#, search_submitter, search_problem, search_problem_id, limit, offset).fetch_all(&state.database).await.map_err(error::internal(Some(&user)))?;
+	let submissions = query!(r#"select submissions.id as submission_id, problems.id as problem_id, problems.name as problem_name, users.id as submitter_id, users.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", result as "result: SimpleTestResponse" from submissions inner join problems on submissions.for_problem = problems.id inner join users on submissions.submitter = users.id where (?1 is null or submissions.submitter in (select id from users where instr(display_name, ?1) > 0)) and (?2 is null or submissions.for_problem in (select id from problems where instr(name, ?2) > 0)) and (?3 is null or submissions.for_problem = ?3) order by submissions.id desc limit ?4 offset ?5"#, search_submitter, search_problem, search_problem_id, limit, offset).fetch_all(&state.database).await.map_err(error::internal(Some(&user)))?;
 
 	let body = html! {
 		details open[any_search] {
@@ -64,6 +64,7 @@ async fn submissions(
 				th { "ID" }
 				th { "Problem" }
 				th { "Submitter" }
+				th { "Language" }
 				th { "Time" }
 				th { "Result" }
 			} }
@@ -71,6 +72,7 @@ async fn submissions(
 				td { (submission.submission_id) }
 				td { a href={"/problem/"(submission.problem_id)} { (submission.problem_name) } }
 				td { a href={"/users/"(submission.submitter_id)} { (submission.submitter_name) } }
+				td { (submission.language.name()) }
 				td { (submission.submission_time) }
 				td { a href={"/submission/"(submission.submission_id)} { (submission.result.map_or("Not yet judged", SimpleTestResponse::as_str)) } }
 			} } }
