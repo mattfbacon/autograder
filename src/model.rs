@@ -131,7 +131,8 @@ enum_to_ty!(crate::sandbox::CaseResultKind, char, case_result_to_char, case_resu
 	Correct => 'c',
 	Wrong => 'w',
 	RuntimeError => 'r',
-	Timeout => 't',
+	TimeLimitExceeded => 't',
+	MemoryLimitExceeded => 'm',
 });
 
 impl crate::sandbox::TestResponse {

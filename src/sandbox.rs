@@ -20,7 +20,8 @@ pub enum CaseResultKind {
 	Correct,
 	Wrong,
 	RuntimeError,
-	Timeout,
+	TimeLimitExceeded,
+	MemoryLimitExceeded,
 }
 
 impl CaseResultKind {
@@ -29,7 +30,8 @@ impl CaseResultKind {
 			Self::Correct => "Correct ✅",
 			Self::Wrong => "Wrong ❌",
 			Self::RuntimeError => "Runtime error 💥",
-			Self::Timeout => "Timeout ⌛",
+			Self::TimeLimitExceeded => "Time Exceeded ⌛",
+			Self::MemoryLimitExceeded => "Memory Exceeded 📚",
 		}
 	}
 }

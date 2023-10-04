@@ -39,15 +39,12 @@ class ResourcePopen(subprocess.Popen):
 	rusage: resource.struct_rusage
 
 	def _try_wait(self, wait_flags: int) -> tuple[int, int]:
-		"""All callers to this function MUST hold self._waitpid_lock."""
 		try:
 			pid, status, rusage = os.wait4(self.pid, wait_flags)
 		except OSError as e:
 			if e.errno != errno.ECHILD:
 				raise
-			# This happens if SIGCLD is set to be ignored or waiting
-			# for child processes has otherwise been disabled for our
-			# process. This child is dead, we can't get the status.
+			# Child is dead.
 			pid = self.pid
 			status = 0
 		else:
@@ -55,8 +52,8 @@ class ResourcePopen(subprocess.Popen):
 		return pid, status
 
 # Returns (stdout, return code, timeout?, memory usage in bytes)
-def resource_call(args: list[str], memory_limit: int, input: str, timeout: int) -> tuple[str | None, int, bool, int]:
-	with ResourcePopen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, encoding='utf8', preexec_fn=lambda: resource.setrlimit(resource.RLIMIT_RSS, (memory_limit, memory_limit))) as process:
+def resource_call(args: list[str], input: str, timeout: int) -> tuple[str | None, int, bool, int]:
+	with ResourcePopen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, encoding='utf8') as process:
 		try:
 			(stdout, _stderr) = process.communicate(input=input, timeout=timeout)
 			return_code = process.poll()
@@ -73,7 +70,7 @@ def resource_call(args: list[str], memory_limit: int, input: str, timeout: int) 
 
 def find_memory_baseline() -> int:
 	ITERS = 3
-	return round(sum(resource_call(['true'], 1_000_000_000, '', 1_000)[3] for _ in range(ITERS)) / ITERS)
+	return round(sum(resource_call(['true'], '', 1_000)[3] for _ in range(ITERS)) / ITERS)
 
 
 # Language-specific code.
@@ -180,14 +177,12 @@ LANGUAGE_FUNCS: list[tuple[Callable[[str], str], Callable[[str], list[str]], Cal
 ]
 
 def do_test(command):
-	memory_baseline = find_memory_baseline()
-
 	(compile, run, _version) = LANGUAGE_FUNCS[command['language']]
 
 	compiled_path = compile(command['code'])
 	args = run(compiled_path)
 
-	memory_limit = command['memory_limit'] * 1_000_000 + memory_baseline
+	memory_limit = command['memory_limit'] * 1_000_000
 	timeout = command['time_limit'] / 1000
 
 	tests = parse_tests(command['tests'])
@@ -195,14 +190,15 @@ def do_test(command):
 
 	for (input, expected_output) in tests:
 		before = time.perf_counter_ns()
-		stdout, return_code, did_timeout, memory_usage = resource_call(args, memory_limit, input, timeout)
+		stdout, return_code, did_timeout, memory_usage = resource_call(args, input, timeout)
 		after = time.perf_counter_ns()
 
 		elapsed_time = (after - before) // 1_000_000
-		memory_usage = max(0, memory_usage - memory_baseline)
 
 		if did_timeout:
-			pass_result = 'Timeout'
+			pass_result = 'TimeLimitExceeded'
+		elif memory_usage > memory_limit:
+			pass_result = 'MemoryLimitExceeded'
 		elif return_code != 0:
 			pass_result = 'RuntimeError'
 		elif stdout is not None and stdout.strip() == expected_output:
