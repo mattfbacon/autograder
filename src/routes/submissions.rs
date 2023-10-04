@@ -11,7 +11,7 @@ use crate::extract::auth::User;
 use crate::model::{Language, PermissionLevel, SubmissionId};
 use crate::sandbox::{Test, TestResponse};
 use crate::template::page;
-use crate::time::Timestamp;
+use crate::time::{now, Timestamp};
 use crate::{error, State};
 
 pub async fn do_judge(
@@ -41,10 +41,13 @@ pub async fn do_judge(
 		.await
 		.map_err(ErrorResponse::internal)?;
 
+	let now = now();
+
 	query!(
-		"update submissions set result = ? where id = ?",
+		"update submissions set judged_time = ?, result = ? where id = ?",
+		now,
 		response,
-		submission_id
+		submission_id,
 	)
 	.execute(&state.database)
 	.await
@@ -68,7 +71,7 @@ async fn handler(
 	user: Option<User>,
 	extract::Path(submission_id): extract::Path<SubmissionId>,
 ) -> Result<Response, Response> {
-	let Some(submission) = query!(r#"select code, for_problem as problem_id, problems.name as problem_name, problems.created_by as problem_author, submitter, users.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", result as "result: TestResponse" from submissions inner join problems on submissions.for_problem = problems.id inner join users on submissions.submitter = users.id where submissions.id = ?"#, submission_id).fetch_optional(&state.database).await.map_err(error::internal(user.as_ref()))? else {
+	let Some(submission) = query!(r#"select code, for_problem as problem_id, problems.name as problem_name, problems.created_by as problem_author, submitter, users.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", judged_time as "judged_time: Timestamp", result as "result: TestResponse" from submissions inner join problems on submissions.for_problem = problems.id inner join users on submissions.submitter = users.id where submissions.id = ?"#, submission_id).fetch_optional(&state.database).await.map_err(error::internal(user.as_ref()))? else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
 
@@ -89,7 +92,13 @@ async fn handler(
 
 	let body = html! {
 		h1 { "Submission for " a href={"/problem/"(submission.problem_id)} { "Problem " (submission.problem_id) ": " (submission.problem_name) } }
-		p { b { "By " (submission.submitter_name) " | Submitted at " (submission.submission_time) } }
+		p { b {
+			"By " (submission.submitter_name)
+			" | Submitted at " (submission.submission_time)
+			@if let Some(judged_time) = submission.judged_time {
+				" | Judged at " (judged_time)
+			}
+		} }
 		h2 { "Test Results" }
 		@match &submission.result {
 			Some(TestResponse::Ok(cases)) => {

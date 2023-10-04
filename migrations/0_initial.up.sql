@@ -17,6 +17,7 @@ create table submissions (
 	submitter integer not null references users on delete cascade,
 	language integer not null,
 	submission_time integer not null,
+	judged_time integer,
 	result text
 ) strict;
 
