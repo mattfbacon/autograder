@@ -16,6 +16,9 @@
 	--color-info: #38d;
 	--on-color-info: #fff;
 
+	--link: var(--accent-dark);
+	--link-visited: var(--text-secondary);
+
 	--space-xs: .4rem;
 	--space-s: .7rem;
 	--space-m: 1rem;
@@ -24,6 +27,32 @@
 	color: var(--text-primary);
 	background: var(--background-primary);
 	font-family: sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--text-primary: #eee;
+		--text-secondary: #ccc;
+
+		--background-primary: #222;
+		--background-secondary: #333;
+
+		--accent-light: #6cc;
+	}
+}
+
+a {
+	color: var(--link);
+}
+a:visited {
+	color: var(--link-visited);
+}
+
+input {
+	background: var(--background-secondary);
+	border: 1px solid var(--text-secondary);
+	border-radius: 1px;
+	color: var(--text-primary);
 }
 
 * {
@@ -61,7 +90,7 @@ nav {
 	gap: var(--space-s);
 }
 
-nav * {
+nav *, :root nav a {
 	color: var(--on-accent-dark);
 }
 
