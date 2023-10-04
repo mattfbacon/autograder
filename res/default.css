@@ -24,6 +24,8 @@
 	--space-m: 1rem;
 	--space-l: 1.2rem;
 
+	--border-thickness: .1rem;
+
 	color: var(--text-primary);
 	background: var(--background-primary);
 	font-family: sans-serif;
@@ -48,11 +50,15 @@ a:visited {
 	color: var(--link-visited);
 }
 
-input {
+input, textarea, select {
 	background: var(--background-secondary);
-	border: 1px solid var(--text-secondary);
-	border-radius: 1px;
+	border: var(--border-thickness) solid var(--text-secondary);
+	border-radius: calc(var(--border-thickness) * 2);
 	color: var(--text-primary);
+}
+
+textarea {
+	background: var(--background-primary);
 }
 
 * {
@@ -87,7 +93,14 @@ nav {
 	color: var(--on-accent-dark);
 	padding: var(--space-s);
 	display: flex;
+	flex-wrap: wrap;
 	gap: var(--space-s);
+}
+
+@media (max-width: 30rem) {
+	nav {
+		gap: var(--space-xs);
+	}
 }
 
 nav *, :root nav a {
@@ -95,7 +108,7 @@ nav *, :root nav a {
 }
 
 main {
-	padding: var(--space-m) var(--space-s);
+	padding: var(--space-s);
 	flex: 1;
 	width: 100%;
 	max-width: 90rem;
@@ -148,13 +161,13 @@ hr {
 pre {
 	font-size: 0.8rem;
 	padding: var(--space-s);
-	border: 1px solid var(--text-secondary);
+	border: var(--border-thickness) solid var(--text-secondary);
 	border-radius: var(--space-xs);
 }
 
 th, td {
 	padding: var(--space-xs);
-	border: 1px solid var(--text-secondary);
+	border: var(--border-thickness) solid var(--text-secondary);
 }
 
 table {
@@ -175,4 +188,16 @@ table {
 	grid-auto-columns: 1fr;
 	width: 100%;
 	gap: var(--space-s);
+}
+
+@media (max-width: 30rem) {
+	.if-not-narrow {
+		display: none;
+	}
+}
+
+@media (min-width: 30rem) {
+	.if-narrow {
+		display: none;
+	}
 }

@@ -46,7 +46,10 @@ const FOOTER: PreEscaped<&str> = PreEscaped(
 
 fn navbar(user: Option<&User>) -> Markup {
 	html! { nav {
-		a href="/" { b { "Autograder" } }
+		a href="/" {
+			b.if-not-narrow { "Autograder" }
+			b.if-narrow { "AG" }
+		}
 		a href="/problems" { "Problems" }
 		a href="/about" { "About" }
 		@if user.is_some_and(|user| user.permission_level >= PermissionLevel::Admin) {
@@ -58,7 +61,7 @@ fn navbar(user: Option<&User>) -> Markup {
 			a href="/logout" { "Log out" }
 		} @else {
 			a href="/login" { "Log in" }
-			a href="/register" { "Register" }
+			a.if-not-narrow href="/register" { "Register" }
 		}
 	} }
 }

@@ -64,6 +64,7 @@ async fn handler(
 			label for="password" { "Password" input id="password" name="password" type="password" autocomplete="current-password" required; }
 			input type="submit" value="Log in";
 		}
+		a href=(return_to.add_to_path("/register")) { "Or register" }
 	};
 
 	let mut page = page("Log In", user.as_ref(), &body);
