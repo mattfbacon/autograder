@@ -80,8 +80,10 @@ pub fn problem_form(old: Option<&Problem>) -> maud::Markup {
 		label {
 			"Tests"
 			textarea required name="tests" placeholder=(EXAMPLE_TESTS) rows="15" { (old.map_or("", |post| post.tests.trim())) }
-			details {
-				summary { "How to write tests" }
+		}
+		details {
+			summary { "How to write tests" }
+			div.details {
 				p { "Separate test cases with three equals signs on their own line." }
 				p { "Separate input and output in a test case with two dashes on their own line." }
 				p { "Example:"}

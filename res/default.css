@@ -3,7 +3,8 @@
 	--text-secondary: #444;
 
 	--background-primary: #fff;
-	--background-secondary: #f1f1f1;
+	--background-secondary: #f4f4f4;
+	--background-tertiary: #ddd;
 
 	--accent-light: #29a;
 
@@ -37,9 +38,11 @@
 		--text-secondary: #ccc;
 
 		--background-primary: #222;
-		--background-secondary: #333;
+		--background-secondary: #2b2b2b;
+		--background-tertiary: #444;
 
 		--accent-light: #6cc;
+		--link: var(--accent-light);
 	}
 }
 
@@ -55,10 +58,6 @@ input, textarea, select {
 	border: var(--border-thickness) solid var(--text-secondary);
 	border-radius: calc(var(--border-thickness) * 2);
 	color: var(--text-primary);
-}
-
-textarea {
-	background: var(--background-primary);
 }
 
 * {
@@ -112,11 +111,18 @@ main {
 	flex: 1;
 	width: 100%;
 	max-width: 90rem;
+}
 
+main, details .details {
 	display: flex;
 	flex-direction: column;
 	align-items: start;
 	gap: var(--space-s);
+}
+
+details .details {
+	gap: var(--space-xs);
+	padding: var(--space-xs);
 }
 
 .spacer {
@@ -155,7 +161,7 @@ form label {
 
 hr {
 	width: 100%;
-	color: var(--background-secondary);
+	border: 1px solid var(--background-tertiary);
 }
 
 pre {
@@ -163,6 +169,7 @@ pre {
 	padding: var(--space-s);
 	border: var(--border-thickness) solid var(--text-secondary);
 	border-radius: var(--space-xs);
+	background: var(--background-secondary);
 }
 
 th, td {
