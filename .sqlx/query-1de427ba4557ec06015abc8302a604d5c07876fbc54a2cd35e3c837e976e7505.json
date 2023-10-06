@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "update users set email = null, remove_email_key = random() where id = ? and remove_email_key = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "1de427ba4557ec06015abc8302a604d5c07876fbc54a2cd35e3c837e976e7505"
+}

@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "select submissions.id as submission_id, problems.id as problem_id, problems.name as problem_name, users.id as submitter_id, users.display_name as submitter_name, language as \"language: Language\", submission_time as \"submission_time: Timestamp\", result as \"result: SimpleTestResponse\" from submissions inner join problems on submissions.for_problem = problems.id inner join users on submissions.submitter = users.id where (?1 is null or submissions.submitter in (select id from users where instr(display_name, ?1) > 0)) and (?2 is null or submissions.for_problem in (select id from problems where instr(name, ?2) > 0)) and (?3 is null or submissions.for_problem = ?3) order by submissions.id desc limit ?4 offset ?5",
+  "describe": {
+    "columns": [
+      {
+        "name": "submission_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "problem_id",
+        "ordinal": 1,
+        "type_info": "Int64"
+      },
+      {
+        "name": "problem_name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "submitter_id",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "submitter_name",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "language: Language",
+        "ordinal": 5,
+        "type_info": "Int64"
+      },
+      {
+        "name": "submission_time: Timestamp",
+        "ordinal": 6,
+        "type_info": "Int64"
+      },
+      {
+        "name": "result: SimpleTestResponse",
+        "ordinal": 7,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "79cf1043058727c4ca163c0ecbf5759a5c8eb3940bc0b2f5a591962e71b54d35"
+}

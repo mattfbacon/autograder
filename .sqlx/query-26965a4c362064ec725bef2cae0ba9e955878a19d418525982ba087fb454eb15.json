@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into sessions (token, user) values (?, ?) on conflict(user) do update set token=excluded.token",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "26965a4c362064ec725bef2cae0ba9e955878a19d418525982ba087fb454eb15"
+}

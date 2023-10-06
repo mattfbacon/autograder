@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into submissions (code, for_problem, submitter, language, submission_time, result) values (?, ?, ?, ?, ?, null) returning id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ce7873bddb076e209041fa6f2dc9c804949ebd31a2120a2c46018cbda6e90788"
+}

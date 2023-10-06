@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "select user as id, users.display_name, users.permission_level as \"permission_level!: PermissionLevel\" from sessions inner join users on sessions.user = users.id where token = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "display_name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "permission_level!: PermissionLevel",
+        "ordinal": 2,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9404225254485cb96a3b1c98e10dc716b410043ba1ecf46a22f50cb092402c9a"
+}

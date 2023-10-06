@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "update users set permission_level = ? where id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "52463e1785a114bdc966571b2614e488ce35bbb7fe5c5a85184e12af5a01ca72"
+}

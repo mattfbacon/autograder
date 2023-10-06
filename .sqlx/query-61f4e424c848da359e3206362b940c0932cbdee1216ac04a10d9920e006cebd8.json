@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "select name, description, time_limit as \"time_limit: u32\", memory_limit as \"memory_limit: u32\", visible as \"visible: bool\", tests from problems inner join users on problems.created_by = users.id where problems.id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "name",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "description",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "time_limit: u32",
+        "ordinal": 2,
+        "type_info": "Int64"
+      },
+      {
+        "name": "memory_limit: u32",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "visible: bool",
+        "ordinal": 4,
+        "type_info": "Int64"
+      },
+      {
+        "name": "tests",
+        "ordinal": 5,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "61f4e424c848da359e3206362b940c0932cbdee1216ac04a10d9920e006cebd8"
+}

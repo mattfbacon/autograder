@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "select display_name, password_reset_key, password_reset_expiration as \"password_reset_expiration: Timestamp\" from users where id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "display_name",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "password_reset_key",
+        "ordinal": 1,
+        "type_info": "Int64"
+      },
+      {
+        "name": "password_reset_expiration: Timestamp",
+        "ordinal": 2,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "88a7fef585c8520adbd58c676fe9e323cd9bcee005a1ce47b7b3973d0f9499f0"
+}

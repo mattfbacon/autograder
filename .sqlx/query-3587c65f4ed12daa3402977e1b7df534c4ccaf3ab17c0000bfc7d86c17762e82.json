@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "select username, display_name, email, creation_time as \"creation_time!: Timestamp\", permission_level as \"permission_level: PermissionLevel\", (select count(*) from submissions where submitter = users.id) as \"total_submissions!: i64\", (select count(distinct for_problem) from submissions where submitter = users.id and result like 'o%') as \"solved_problems!: i64\" from users where id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "username",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "display_name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "creation_time!: Timestamp",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "permission_level: PermissionLevel",
+        "ordinal": 4,
+        "type_info": "Int64"
+      },
+      {
+        "name": "total_submissions!: i64",
+        "ordinal": 5,
+        "type_info": "Null"
+      },
+      {
+        "name": "solved_problems!: i64",
+        "ordinal": 6,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "3587c65f4ed12daa3402977e1b7df534c4ccaf3ab17c0000bfc7d86c17762e82"
+}

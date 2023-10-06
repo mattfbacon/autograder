@@ -23,7 +23,10 @@ rand = "0.8"
 regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_bytes = "0.11"
-sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite"] }
+sqlx = { version = "0.7", git = "https://github.com/mattfbacon/sqlx", features = [
+	"runtime-tokio-rustls",
+	"sqlite",
+] }
 temp-dir = "0.1"
 thiserror = "1"
 time = { version = "0.3", features = ["formatting"] }

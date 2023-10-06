@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "select id, username, display_name, creation_time as \"creation_time: Timestamp\", permission_level as \"permission_level: PermissionLevel\" from users order by id desc limit ? offset ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "username",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "display_name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "creation_time: Timestamp",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "permission_level: PermissionLevel",
+        "ordinal": 4,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "dddaa632eede0dc6b35c9050bd15ab444c8014a78ddb32b0789f3ebbba1bdcea"
+}

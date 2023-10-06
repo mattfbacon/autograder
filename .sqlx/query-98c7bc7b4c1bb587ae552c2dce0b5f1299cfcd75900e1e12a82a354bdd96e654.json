@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "select created_by from problems where id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "created_by",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "98c7bc7b4c1bb587ae552c2dce0b5f1299cfcd75900e1e12a82a354bdd96e654"
+}

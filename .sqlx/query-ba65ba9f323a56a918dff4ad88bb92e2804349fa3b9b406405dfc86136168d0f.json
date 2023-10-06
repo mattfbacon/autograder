@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "select code, language as \"language: Language\", problems.memory_limit as \"memory_limit: u32\", problems.time_limit as \"time_limit: u32\", problems.tests from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "code",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "language: Language",
+        "ordinal": 1,
+        "type_info": "Int64"
+      },
+      {
+        "name": "memory_limit: u32",
+        "ordinal": 2,
+        "type_info": "Int64"
+      },
+      {
+        "name": "time_limit: u32",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "tests",
+        "ordinal": 4,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ba65ba9f323a56a918dff4ad88bb92e2804349fa3b9b406405dfc86136168d0f"
+}

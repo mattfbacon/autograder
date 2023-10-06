@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "update submissions set judged_time = ?, result = ? where id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "1d446649a093e2c360589e8d61437dff2b1a31f987e7693c4cc90352d36f9863"
+}

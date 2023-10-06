@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "delete from problems where id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "9e2e8586fe6f3ab8d32d999125eaedbe8fc8885aa5422393bc943a48e3ddb81d"
+}

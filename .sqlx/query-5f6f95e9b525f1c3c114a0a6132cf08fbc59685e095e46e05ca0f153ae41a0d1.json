@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "select id as \"id!\", password as \"hash: Hash\" from users where username = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "hash: Hash",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "5f6f95e9b525f1c3c114a0a6132cf08fbc59685e095e46e05ca0f153ae41a0d1"
+}

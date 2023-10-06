@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "select code, for_problem as problem_id, problems.name as problem_name, problems.created_by as problem_author, submitter, users.display_name as submitter_name, language as \"language: Language\", submission_time as \"submission_time: Timestamp\", judged_time as \"judged_time: Timestamp\", result as \"result: TestResponse\" from submissions inner join problems on submissions.for_problem = problems.id inner join users on submissions.submitter = users.id where submissions.id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "code",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "problem_id",
+        "ordinal": 1,
+        "type_info": "Int64"
+      },
+      {
+        "name": "problem_name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "problem_author",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "submitter",
+        "ordinal": 4,
+        "type_info": "Int64"
+      },
+      {
+        "name": "submitter_name",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "language: Language",
+        "ordinal": 6,
+        "type_info": "Int64"
+      },
+      {
+        "name": "submission_time: Timestamp",
+        "ordinal": 7,
+        "type_info": "Int64"
+      },
+      {
+        "name": "judged_time: Timestamp",
+        "ordinal": 8,
+        "type_info": "Int64"
+      },
+      {
+        "name": "result: TestResponse",
+        "ordinal": 9,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "ad8e7f59f2501ea9bc2418ec237549433e120ee4e7be8fcc3add945bc4bc767a"
+}

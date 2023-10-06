@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into problems (name, description, time_limit, memory_limit, visible, tests, creation_time, created_by) values (?, ?, ?, ?, ?, ?, ?, ?) returning id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4021ae37c9000c9d712257c7c532ab23b0c5bf5e651b4d0a317bee7e4b0b7a3a"
+}
