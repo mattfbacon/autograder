@@ -71,7 +71,7 @@ async fn main() {
 	let state = Arc::new(State { database, sandbox });
 
 	let app = axum::Router::new()
-		.merge(routes::router())
+		.merge(routes::router().layer(error::method_not_allowed_layer()))
 		.route_layer(auth::layer(Arc::clone(&state)))
 		.fallback(error::not_found_handler)
 		.with_state(state)

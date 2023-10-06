@@ -1,8 +1,14 @@
+use std::convert::Infallible;
 use std::future::Future;
 
-use axum::http::StatusCode;
+use axum::body::{Body, HttpBody};
+use axum::http::{Request, StatusCode};
+use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
+use axum::routing::Route;
 use maud::html;
+use tower_layer::Layer;
+use tower_service::Service;
 
 use crate::extract::auth::User;
 use crate::template::page;
@@ -59,7 +65,7 @@ impl ErrorResponse {
 		(self.status, page("Error!", user, &body).custom_title()).into_response()
 	}
 
-	pub fn into_response_in_extractor(self, parts: &mut axum::http::request::Parts) -> Response {
+	pub fn into_response_in_extractor(self, parts: &axum::http::request::Parts) -> Response {
 		let user = parts.extensions.get::<User>();
 		self.into_response(user)
 	}
@@ -88,4 +94,36 @@ pub fn fake_not_found(user: Option<&User>) -> impl Future<Output = Response> + '
 
 pub async fn not_found_handler(user: Option<User>) -> Response {
 	not_found(user.as_ref()).await
+}
+
+async fn method_not_allowed_layer_inner(req: Request<Body>, next: Next<Body>) -> Response {
+	let method = req.method().clone();
+	let user = req.extensions().get::<User>().cloned();
+
+	let mut response = next.run(req).await;
+
+	// Detect a Method Not Allowed response from a `MethodRouter` (with an empty body) and replace it.
+	// Doing this here is simpler than setting the fallback handler for every `MethodRouter` across the entire app.
+	if response.status() == StatusCode::METHOD_NOT_ALLOWED
+		&& response.body().size_hint().exact() == Some(0)
+	{
+		let error = ErrorResponse {
+			status: StatusCode::METHOD_NOT_ALLOWED,
+			message: format!("The {method} method is not supported for this route."),
+		};
+		// The default handler sets `Content-Length` manually (not sure why).
+		// This will be a problem because obviously it will not be correct.
+		response.headers_mut().remove("Content-Length");
+		*response.body_mut() = error.into_response(user.as_ref()).into_body();
+	}
+
+	response
+}
+
+#[rustfmt::skip] // Rustfmt chokes on this big generic type.
+pub fn method_not_allowed_layer() -> impl Layer<
+	Route,
+	Service = impl Service<Request<Body>, Response = Response, Future = impl Send, Error = Infallible> + Clone,
+> + Clone {
+	axum::middleware::from_fn(method_not_allowed_layer_inner)
 }
