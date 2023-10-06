@@ -1,3 +1,4 @@
+use std::ops::Add;
 use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
@@ -22,6 +23,16 @@ impl Timestamp {
 		Self {
 			seconds_since_epoch,
 		}
+	}
+
+	#[must_use]
+	pub fn is_before(self, other: Self) -> bool {
+		self < other
+	}
+
+	#[must_use]
+	pub fn is_in_past(self) -> bool {
+		self.is_before(now())
 	}
 
 	fn repr(self) -> i64 {
@@ -64,4 +75,18 @@ impl std::fmt::Display for Timestamp {
 #[must_use]
 pub fn now() -> Timestamp {
 	Timestamp::now()
+}
+
+impl Add<i64> for Timestamp {
+	type Output = Self;
+
+	fn add(self, offset: i64) -> Self {
+		Self {
+			seconds_since_epoch: self.seconds_since_epoch + offset,
+		}
+	}
+}
+
+pub fn minutes(v: i64) -> i64 {
+	v * 60
 }
