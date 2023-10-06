@@ -130,7 +130,7 @@ impl<'r> sqlx::Decode<'r, sqlx::Sqlite> for Token {
 #[derive(Debug, Clone)]
 pub struct User {
 	pub id: UserId,
-	pub display_name: String,
+	pub display_name: Arc<str>,
 	pub permission_level: PermissionLevel,
 }
 
