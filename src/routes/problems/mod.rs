@@ -35,12 +35,24 @@ async fn handler(
 	let limit = pagination.limit();
 	let offset = pagination.offset();
 
-	let num_problems = query_scalar!(r#"select count(*) as "count: i64" from problems"#)
-		.fetch_one(&state.database)
-		.await
-		.map_err(error::internal(user.as_ref()))?;
+	let show_invisible = user
+		.as_ref()
+		.is_some_and(|user| user.permission_level >= PermissionLevel::Admin);
+
+	let num_problems = if show_invisible {
+		query_scalar!(r#"select count(*) as "count: i64" from problems"#)
+	} else {
+		query_scalar!(r#"select count(*) as "count: i64" from problems where visible = 1"#)
+	}
+	.fetch_one(&state.database)
+	.await
+	.map_err(error::internal(user.as_ref()))?;
+
 	let problems = query!(
-		r#"select id as "id!", name, (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64" from problems order by problems.id limit ? offset ?"#, limit, offset,
+		r#"select id as "id!", name, (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", visible as "visible: bool", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64" from problems where ? or visible = 1 order by problems.id limit ? offset ?"#,
+		show_invisible,
+		limit,
+		offset,
 	).fetch_all(&state.database).await.map_err(error::internal(user.as_ref()))?;
 
 	let body = html! {
@@ -53,6 +65,9 @@ async fn handler(
 				th { "Title" }
 				th { "# Submissions" }
 				th { "Pass Rate" }
+				@if show_invisible {
+					th { "Visible" }
+				}
 			} }
 			tbody { @for problem in &problems { tr {
 				td { (problem.id) }
@@ -64,6 +79,9 @@ async fn handler(
 					} @else {
 						"N/A"
 					}
+				}
+				@if show_invisible {
+					td { input type="checkbox" role="presentation" title=(if problem.visible { "Visible" } else { "Not visible" }) checked[problem.visible] disabled; }
 				}
 			} } }
 		}
