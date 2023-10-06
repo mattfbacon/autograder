@@ -109,6 +109,8 @@ impl<'a> Page<'a> {
 					footer {
 						p { "It is currently " (now()) "." }
 						(FOOTER)
+						@let admin_email = &crate::CONFIG.admin_email;
+						p { "If you have issues, please report them to the admin at " a href={"mailto:"(admin_email)} { (admin_email) } ". Please report any bugs to the GitHub repository linked above." }
 					}
 				}
 			}

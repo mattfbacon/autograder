@@ -1,5 +1,7 @@
 #[derive(serde::Deserialize)]
-pub struct Config {}
+pub struct Config {
+	pub admin_email: String,
+}
 
 const CONFIG_PATH: &str = "config.toml";
 
