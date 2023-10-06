@@ -6,6 +6,7 @@ mod about;
 mod admin;
 mod log_in;
 mod log_out;
+mod password_reset;
 mod problems;
 mod register;
 mod root;
@@ -18,6 +19,7 @@ pub fn router() -> axum::Router<Arc<State>> {
 		.merge(admin::router())
 		.merge(log_in::router())
 		.merge(log_out::router())
+		.merge(password_reset::router())
 		.merge(problems::router())
 		.merge(register::router())
 		.merge(root::router())

@@ -28,9 +28,15 @@ create table users (
 	id integer primary key,
 	username text unique not null,
 	display_name text not null,
+	email text,
 	password text not null,
 	creation_time integer not null,
-	permission_level integer not null
+	permission_level integer not null,
+
+	password_reset_expiration integer,
+	password_reset_key integer,
+
+	remove_email_key integer not null default (random())
 ) strict;
 
 create table sessions (

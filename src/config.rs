@@ -1,6 +1,23 @@
 #[derive(serde::Deserialize)]
 pub struct Config {
+	/// Required for external links.
+	pub url: String,
 	pub admin_email: String,
+	pub smtp: Smtp,
+}
+
+#[derive(serde::Deserialize)]
+pub struct Smtp {
+	pub host: String,
+	pub port: u16,
+	pub username: String,
+	pub password: String,
+	#[serde(default = "false_")]
+	pub implicit_tls: bool,
+}
+
+const fn false_() -> bool {
+	false
 }
 
 const CONFIG_PATH: &str = "config.toml";

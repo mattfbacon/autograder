@@ -69,6 +69,7 @@ async fn handler(
 			label for="password" { "Password" input id="password" name="password" type="password" autocomplete="current-password" required; }
 			input type="submit" value="Log in";
 		}
+		a href="/password-reset" { "Forgot password?" }
 		a href=(return_to.add_to_path("/register")) { "Or register" }
 	};
 

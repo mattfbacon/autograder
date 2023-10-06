@@ -21,10 +21,11 @@ use crate::State;
 struct Form {
 	username: String,
 	display_name: String,
+	email: Option<String>,
 	password: String,
 }
 
-async fn handle_post(state: &State, request: Form) -> Result<(), ErrorResponse> {
+async fn handle_post(state: &State, mut request: Form) -> Result<(), ErrorResponse> {
 	// We do this now because password hashing is a bit computationally intensive.
 	// If this were the only check, it would be prone to race conditions, but it's not.
 	let user = query!("select id from users where username = ?", request.username)
@@ -36,13 +37,16 @@ async fn handle_post(state: &State, request: Form) -> Result<(), ErrorResponse> 
 		return Err(ErrorResponse::bad_request("The username is already taken."));
 	}
 
+	request.email = request.email.filter(|s| !s.is_empty());
+
 	let password_hash = crate::password::hash(&request.password);
 	let creation_time = now();
 	let permission_level = PermissionLevel::default();
 	let res = query!(
-		"insert into users (username, display_name, password, creation_time, permission_level) values (?, ?, ?, ?, ?)",
+		"insert into users (username, display_name, email, password, creation_time, permission_level) values (?, ?, ?, ?, ?, ?)",
 		request.username,
 		request.display_name,
+		request.email,
 		password_hash,
 		creation_time,
 		permission_level,
@@ -84,6 +88,7 @@ async fn handler(
 		form method="post" {
 			label { "Username" input name="username" type="text" required; }
 			label { "Display name" input name="display_name" type="text" required; }
+			label { "Email (optional, for password reset)" input name="email" type="email"; }
 			label { "Password" input name="password" type="password" autocomplete="new-password" required; }
 			input type="submit" value="Register";
 		}
