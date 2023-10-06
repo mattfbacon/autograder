@@ -15,7 +15,7 @@ use crate::extract::return_to::ReturnTo;
 use crate::model::PermissionLevel;
 use crate::template::{page, BannerKind};
 use crate::time::now;
-use crate::{password, State};
+use crate::State;
 
 #[derive(Deserialize)]
 struct Form {
@@ -36,7 +36,7 @@ async fn handle_post(state: &State, request: Form) -> Result<(), ErrorResponse> 
 		return Err(ErrorResponse::bad_request("The username is already taken."));
 	}
 
-	let password_hash = password::Hash::new(&request.password);
+	let password_hash = crate::password::hash(&request.password);
 	let creation_time = now();
 	let permission_level = PermissionLevel::default();
 	let res = query!(

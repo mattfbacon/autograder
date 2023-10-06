@@ -12,6 +12,7 @@ use crate::error::ErrorResponse;
 use crate::extract::auth::{self, Token, User};
 use crate::extract::if_post::IfPost;
 use crate::extract::return_to::ReturnTo;
+use crate::password::Hash;
 use crate::template::{page, BannerKind};
 use crate::State;
 
@@ -23,7 +24,7 @@ struct Form {
 
 async fn handle_post(state: &State, form: Form) -> Result<Token, ErrorResponse> {
 	let entry = query!(
-		r#"select id as "id!", password as hash from users where username = ?"#,
+		r#"select id as "id!", password as "hash: Hash" from users where username = ?"#,
 		form.username,
 	)
 	.fetch_optional(&state.database)
@@ -31,7 +32,11 @@ async fn handle_post(state: &State, form: Form) -> Result<Token, ErrorResponse> 
 	.map_err(ErrorResponse::internal)?;
 
 	if let Some(entry) = entry {
-		if bcrypt::verify(&form.password, &entry.hash).map_err(ErrorResponse::internal)? {
+		if entry
+			.hash
+			.verify(&form.password)
+			.map_err(ErrorResponse::internal)?
+		{
 			let token = auth::log_in(state, entry.id).await?;
 			return Ok(token);
 		}
