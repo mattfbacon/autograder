@@ -20,12 +20,15 @@
 
 use std::sync::Arc;
 
+use once_cell::sync::Lazy;
 use sqlx::SqlitePool;
 
+use crate::config::Config;
 use crate::extract::auth;
 use crate::resources::resources;
 use crate::sandbox::Sandbox;
 
+mod config;
 mod error;
 mod extract;
 mod model;
@@ -36,6 +39,8 @@ mod sandbox;
 mod template;
 mod time;
 mod util;
+
+static CONFIG: Lazy<Config> = Lazy::new(Config::load);
 
 pub struct State {
 	database: SqlitePool,
@@ -56,6 +61,8 @@ async fn main() {
 			),
 		)
 		.init();
+
+	Lazy::force(&CONFIG);
 
 	let database = SqlitePool::connect("sqlite://db.sqlite?mode=rwc")
 		.await

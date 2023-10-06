@@ -24,6 +24,7 @@ temp-dir = "0.1"
 thiserror = "1"
 time = { version = "0.3", features = ["formatting"] }
 tokio = { version = "1", features = ["rt", "macros", "sync", "process"] }
+toml = "0.8"
 tower-layer = "0.3"
 tower-service = "0.3"
 tracing = "0.1"
