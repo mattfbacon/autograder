@@ -182,7 +182,8 @@ def do_test(command):
 	compiled_path = compile(command['code'])
 	args = run(compiled_path)
 
-	memory_limit = command['memory_limit'] * 1_000_000
+	memory_baseline = find_memory_baseline()
+	memory_limit = command['memory_limit'] * 1_000_000 + memory_baseline
 	timeout = command['time_limit'] / 1000
 
 	tests = parse_tests(command['tests'])
@@ -206,7 +207,7 @@ def do_test(command):
 		else:
 			pass_result = 'Wrong'
 
-		passes.append({ 'kind': pass_result, 'time': elapsed_time, 'memory_usage': memory_usage })
+		passes.append({ 'kind': pass_result, 'time': elapsed_time, 'memory_usage': max(0, memory_usage - memory_baseline) })
 
 	return { 'Ok': passes }
 
