@@ -19,9 +19,9 @@ async fn handler(
 			.map_err(error::internal(Some(&user)))?;
 	}
 
-	Ok((Token::removal(), Redirect::to("/login")))
+	Ok((Token::removal(), Redirect::to("/log-in")))
 }
 
 pub fn router() -> axum::Router<Arc<State>> {
-	axum::Router::new().route("/logout", get(handler))
+	axum::Router::new().route("/log-out", get(handler))
 }

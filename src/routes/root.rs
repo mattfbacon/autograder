@@ -13,7 +13,7 @@ async fn root(user: Option<User>) -> Response {
 		@if let Some(user) = &user {
 			p { "Welcome, " (user.display_name) }
 		} @else {
-			p { "Hello! Please " a href="/login" { "log in" } " or " a href="/register" { "register" } "." }
+			p { "Hello! Please " a href="/log-in" { "log in" } " or " a href="/register" { "register" } "." }
 		}
 	};
 	page("Dashboard", user.as_ref(), &body).into_response()

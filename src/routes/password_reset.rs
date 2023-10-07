@@ -95,7 +95,7 @@ async fn do_reset(
 		.await
 		.map_err(error::internal(login_user.as_ref()))?;
 
-		return Ok(Redirect::to("/login").into_response());
+		return Ok(Redirect::to("/log-in").into_response());
 	}
 
 	let body = html! {

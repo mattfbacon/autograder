@@ -152,7 +152,7 @@ impl User {
 		if let Some(user) = parts.extensions.get::<User>() {
 			Ok(user.clone())
 		} else {
-			let return_to = return_to::add_to_path("/login", parts.uri.path());
+			let return_to = return_to::add_to_path("/log-in", parts.uri.path());
 			Err(Redirect::to(&return_to).into_response())
 		}
 	}

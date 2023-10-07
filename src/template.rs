@@ -58,9 +58,9 @@ fn navbar(user: Option<&User>) -> Markup {
 		div.spacer role="presentation" {}
 		@if let Some(user) = user {
 			a href={"/users/"(user.id)} { (user.display_name) }
-			a href="/logout" { "Log out" }
+			a href="/log-out" { "Log out" }
 		} @else {
-			a href="/login" { "Log in" }
+			a href="/log-in" { "Log in" }
 			a.if-not-narrow href="/register" { "Register" }
 		}
 	} }

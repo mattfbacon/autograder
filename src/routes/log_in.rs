@@ -81,5 +81,5 @@ async fn handler(
 }
 
 pub fn router() -> axum::Router<Arc<State>> {
-	axum::Router::new().route("/login", get(handler).post(handler))
+	axum::Router::new().route("/log-in", get(handler).post(handler))
 }

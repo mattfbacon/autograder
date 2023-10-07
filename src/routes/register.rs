@@ -76,7 +76,7 @@ async fn handler(
 ) -> Response {
 	let error = if let Some(extract::Form(post)) = post {
 		match handle_post(&state, post).await {
-			Ok(()) => return Redirect::to(&return_to.add_to_path("/login")).into_response(),
+			Ok(()) => return Redirect::to(&return_to.add_to_path("/log-in")).into_response(),
 			Err(error) => Some(error),
 		}
 	} else {
@@ -92,7 +92,7 @@ async fn handler(
 			label { "Password" input name="password" type="password" autocomplete="new-password" required; }
 			input type="submit" value="Register";
 		}
-		a href=(return_to.add_to_path("/login")) { "Or log in" }
+		a href=(return_to.add_to_path("/log-in")) { "Or log in" }
 	};
 
 	let mut page = page("Register", user.as_ref(), &body);
