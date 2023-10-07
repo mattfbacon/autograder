@@ -191,7 +191,7 @@ async fn extract_user(
 		Err(error) => return Ok(Err(error)),
 	};
 
-	let Some(inner) = query!(r#"select user as id, users.display_name, users.permission_level as "permission_level!: PermissionLevel", expiration as "expiration: Timestamp" from sessions inner join users on sessions.user = users.id where token = ?"#, token).fetch_optional(&state.database).await.map_err(ErrorResponse::internal)? else { return Ok(Err(NoUser { should_remove_token: true })); };
+	let Some(inner) = query!(r#"select user as id, users.display_name as "display_name: Arc<str>", users.permission_level as "permission_level!: PermissionLevel", expiration as "expiration: Timestamp" from sessions inner join users on sessions.user = users.id where token = ?"#, token).fetch_optional(&state.database).await.map_err(ErrorResponse::internal)? else { return Ok(Err(NoUser { should_remove_token: true })); };
 
 	let now = now();
 
@@ -220,7 +220,7 @@ async fn extract_user(
 
 	Ok(Ok(User {
 		id: inner.id,
-		display_name: inner.display_name.into(),
+		display_name: inner.display_name,
 		permission_level: inner.permission_level,
 	}))
 }
