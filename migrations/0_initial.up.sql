@@ -42,5 +42,6 @@ create table users (
 
 create table sessions (
 	token blob not null primary key,
-	user integer unique not null references users on delete cascade
+	user integer not null references users on delete cascade,
+	expiration integer not null
 ) without rowid, strict;

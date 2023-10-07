@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "select user as id, users.display_name, users.permission_level as \"permission_level!: PermissionLevel\" from sessions inner join users on sessions.user = users.id where token = ?",
+  "query": "select user as id, users.display_name, users.permission_level as \"permission_level!: PermissionLevel\", expiration as \"expiration: Timestamp\" from sessions inner join users on sessions.user = users.id where token = ?",
   "describe": {
     "columns": [
       {
@@ -17,6 +17,11 @@
         "name": "permission_level!: PermissionLevel",
         "ordinal": 2,
         "type_info": "Int64"
+      },
+      {
+        "name": "expiration: Timestamp",
+        "ordinal": 3,
+        "type_info": "Int64"
       }
     ],
     "parameters": {
@@ -25,8 +30,9 @@
     "nullable": [
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "9404225254485cb96a3b1c98e10dc716b410043ba1ecf46a22f50cb092402c9a"
+  "hash": "75c124cb8212b21423d8c89b3f93d3681701ad8ad0af30df1b3b0256bfd1f33a"
 }

@@ -12,13 +12,14 @@ use axum::response::{IntoResponse, IntoResponseParts, Redirect, Response, Respon
 use axum::routing::Route;
 use axum::{async_trait, extract};
 use cookie::Cookie;
-use sqlx::{query, query_as};
+use sqlx::query;
 use tower_layer::Layer;
 use tower_service::Service;
 
 use crate::error::ErrorResponse;
 use crate::extract::return_to;
 use crate::model::{PermissionLevel, UserId};
+use crate::time::{days, minutes, now, Duration, Timestamp};
 use crate::State;
 
 const COOKIE_NAME: &str = "token";
@@ -47,9 +48,21 @@ impl Token {
 	}
 
 	pub fn removal() -> impl IntoResponseParts {
-		let mut cookie = Cookie::named(COOKIE_NAME);
-		cookie.make_removal();
-		[("Set-Cookie", cookie.encoded().to_string())]
+		struct Helper;
+
+		impl IntoResponseParts for Helper {
+			type Error = Infallible;
+
+			fn into_response_parts(self, mut res: ResponseParts) -> Result<ResponseParts, Infallible> {
+				let mut cookie = Cookie::named(COOKIE_NAME);
+				cookie.make_removal();
+				let value = cookie.encoded().to_string().try_into().unwrap();
+				res.headers_mut().append("Set-Cookie", value);
+				Ok(res)
+			}
+		}
+
+		Helper
 	}
 }
 
@@ -145,22 +158,71 @@ impl User {
 	}
 }
 
-async fn extract_user(headers: &HeaderMap, state: &State) -> Option<Result<User, ErrorResponse>> {
-	let cookies = headers.get("Cookie")?;
-	let cookies = std::str::from_utf8(cookies.as_bytes()).ok()?;
+struct NoUser {
+	should_remove_token: bool,
+}
 
-	let token = Cookie::split_parse(cookies)
-		.filter_map(Result::ok)
-		.find(|cookie| cookie.name() == COOKIE_NAME)?;
-	let token = token.value();
-	let token: Token = token.parse().ok()?;
+async fn extract_user(
+	headers: &HeaderMap,
+	state: &State,
+) -> Result<Result<User, NoUser>, ErrorResponse> {
+	fn extract_cookie(headers: &HeaderMap) -> Result<Token, NoUser> {
+		headers
+			.get("Cookie")
+			.ok_or(false)
+			.and_then(|header| {
+				std::str::from_utf8(header.as_bytes())
+					.ok()
+					.and_then(|header| {
+						Cookie::split_parse(header)
+							.filter_map(Result::ok)
+							.find(|cookie| cookie.name() == COOKIE_NAME)
+					})
+					.and_then(|cookie| cookie.value().parse().ok())
+					.ok_or(true)
+			})
+			.map_err(|should_remove_token| NoUser {
+				should_remove_token,
+			})
+	}
 
-	let inner = match query_as!(User, r#"select user as id, users.display_name, users.permission_level as "permission_level!: PermissionLevel" from sessions inner join users on sessions.user = users.id where token = ?"#, token).fetch_optional(&state.database).await {
-		Err(error) => return Some(Err(ErrorResponse::internal(error))),
-		Ok(inner) => inner?,
+	let token = match extract_cookie(headers) {
+		Ok(token) => token,
+		Err(error) => return Ok(Err(error)),
 	};
 
-	Some(Ok(inner))
+	let Some(inner) = query!(r#"select user as id, users.display_name, users.permission_level as "permission_level!: PermissionLevel", expiration as "expiration: Timestamp" from sessions inner join users on sessions.user = users.id where token = ?"#, token).fetch_optional(&state.database).await.map_err(ErrorResponse::internal)? else { return Ok(Err(NoUser { should_remove_token: true })); };
+
+	let now = now();
+
+	if inner.expiration.is_before(now) {
+		query!("delete from sessions where token = ?", token)
+			.execute(&state.database)
+			.await
+			.map_err(ErrorResponse::internal)?;
+		return Ok(Err(NoUser {
+			should_remove_token: true,
+		}));
+	}
+
+	let new_expiration = now + TOKEN_DURATION;
+	// Try not to do too many database writes. `last_used` doesn't need that much precision.
+	if (inner.expiration - new_expiration).abs() > TOKEN_DURATION_GRANULARITY {
+		query!(
+			"update sessions set expiration = ? where token = ?",
+			new_expiration,
+			token,
+		)
+		.execute(&state.database)
+		.await
+		.map_err(ErrorResponse::internal)?;
+	}
+
+	Ok(Ok(User {
+		id: inner.id,
+		display_name: inner.display_name.into(),
+		permission_level: inner.permission_level,
+	}))
 }
 
 async fn layer_inner(
@@ -169,14 +231,25 @@ async fn layer_inner(
 	next: Next<Body>,
 ) -> Response {
 	match extract_user(request.headers(), &state).await {
-		Some(Ok(user)) => {
-			request.extensions_mut().insert(user);
+		Ok(maybe_user) => {
+			let should_remove_token = maybe_user
+				.as_ref()
+				.is_err_and(|error| error.should_remove_token);
+			if let Ok(user) = maybe_user {
+				request.extensions_mut().insert(user);
+			}
+
+			let response = next.run(request).await;
+
+			if should_remove_token {
+				(Token::removal(), response).into_response()
+			} else {
+				response
+			}
 		}
 		// This is a special case because extracting the user failed, so inherently we cannot have a user present here.
-		Some(Err(error)) => return error.into_response(None),
-		None => {}
+		Err(error) => error.into_response(None),
 	}
-	next.run(request).await
 }
 
 #[rustfmt::skip] // Rustfmt chokes on this big generic type.
@@ -201,20 +274,26 @@ impl<S: Send> FromRequestParts<S> for User {
 	}
 }
 
+pub const TOKEN_DURATION: Duration = days(5);
+const TOKEN_DURATION_GRANULARITY: Duration = minutes(5);
+
 pub async fn log_in(state: &State, user_id: UserId) -> Result<Token, ErrorResponse> {
 	let token = loop {
 		let token = Token::generate();
-		// If a user logs in when they already have a session, replace the old one.
+		let expiration = now() + TOKEN_DURATION;
 		let res = query!(
-		"insert into sessions (token, user) values (?, ?) on conflict(user) do update set token=excluded.token",
-		token,
-		user_id,
-	).execute(&state.database).await;
+			"insert into sessions (token, user, expiration) values (?, ?, ?)",
+			token,
+			user_id,
+			expiration,
+		)
+		.execute(&state.database)
+		.await;
 		match res {
 			Err(sqlx::Error::Database(error))
 				if error.kind() == sqlx::error::ErrorKind::UniqueViolation =>
 			{
-				continue
+				continue;
 			}
 			Err(error) => return Err(ErrorResponse::internal(error)),
 			Ok(_) => break token,

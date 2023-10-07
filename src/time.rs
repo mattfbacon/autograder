@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Sub};
 use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
@@ -77,16 +77,45 @@ pub fn now() -> Timestamp {
 	Timestamp::now()
 }
 
-impl Add<i64> for Timestamp {
+/// In seconds.
+pub type Duration = i64;
+
+impl Add<Duration> for Timestamp {
 	type Output = Self;
 
-	fn add(self, offset: i64) -> Self {
+	fn add(self, offset: Duration) -> Self {
 		Self {
 			seconds_since_epoch: self.seconds_since_epoch + offset,
 		}
 	}
 }
 
-pub fn minutes(v: i64) -> i64 {
+impl Sub<Duration> for Timestamp {
+	type Output = Self;
+
+	fn sub(self, offset: Duration) -> Self {
+		Self {
+			seconds_since_epoch: self.seconds_since_epoch - offset,
+		}
+	}
+}
+
+impl Sub<Self> for Timestamp {
+	type Output = Duration;
+
+	fn sub(self, other: Self) -> Duration {
+		self.seconds_since_epoch - other.seconds_since_epoch
+	}
+}
+
+pub const fn minutes(v: i64) -> Duration {
 	v * 60
+}
+
+pub const fn hours(v: i64) -> Duration {
+	minutes(v) * 60
+}
+
+pub const fn days(v: i64) -> Duration {
+	hours(v) * 24
 }
