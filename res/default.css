@@ -3,7 +3,7 @@
 	--text-secondary: #444;
 
 	--background-primary: #fff;
-	--background-secondary: #f4f4f4;
+	--background-secondary: #f8f8f8;
 	--background-tertiary: #ddd;
 
 	--accent-light: #29a;
@@ -58,6 +58,10 @@ input, textarea, select {
 	border: var(--border-thickness) solid var(--text-secondary);
 	border-radius: calc(var(--border-thickness) * 2);
 	color: var(--text-primary);
+}
+
+textarea {
+	padding: 0.3rem 0.2rem;
 }
 
 * {
@@ -164,12 +168,26 @@ hr {
 	border: 1px solid var(--background-tertiary);
 }
 
+code {
+	border-radius: calc( var(--border-thickness) * 2);
+	padding: 0.2rem;
+	vertical-align: middle;
+	background: var(--background-secondary);
+}
+
 pre {
 	font-size: 0.8rem;
 	padding: var(--space-s);
 	border: var(--border-thickness) solid var(--text-secondary);
 	border-radius: var(--space-xs);
 	background: var(--background-secondary);
+}
+
+pre code {
+	padding: unset;
+	vertical-align: unset;
+	background: unset;
+	border-radius: unset;
 }
 
 th, td {
