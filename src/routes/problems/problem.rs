@@ -35,8 +35,18 @@ async fn handle_edit_post(
 	post: &super::new::Problem,
 ) -> Result<(), ErrorResponse> {
 	Tests::validate(&post.tests).map_err(|error| ErrorResponse::bad_request(error.to_string()))?;
+	if let Some(judger) = &post.custom_judger {
+		state
+			.sandbox
+			.validate_judger(judger)
+			.await
+			.map_err(ErrorResponse::internal)?
+			.map_err(|error| {
+				ErrorResponse::bad_request(format!("Custom judger failed validation: {error}"))
+			})?;
+	}
 
-	query!("update problems set name = ?, description = ?, time_limit = ?, memory_limit = ?, visible = ?, tests = ? where id = ?", post.name, post.description, post.time_limit, post.memory_limit, post.visible, post.tests, problem_id).execute(&state.database).await.map_err(ErrorResponse::internal)?;
+	query!("update problems set name = ?, description = ?, time_limit = ?, memory_limit = ?, visible = ?, tests = ?, custom_judger = ? where id = ?", post.name, post.description, post.time_limit, post.memory_limit, post.visible, post.tests, post.custom_judger, problem_id).execute(&state.database).await.map_err(ErrorResponse::internal)?;
 
 	Ok(())
 }
@@ -66,7 +76,7 @@ async fn edit_handler(
 
 	let Some(problem) = query_as!(
 		super::new::Problem,
-		r#"select name, description, time_limit as "time_limit: u32", memory_limit as "memory_limit: u32", visible as "visible: bool", tests from problems inner join users on problems.created_by = users.id where problems.id = ?"#,
+		r#"select name, description, time_limit as "time_limit: u32", memory_limit as "memory_limit: u32", visible as "visible: bool", tests, custom_judger from problems inner join users on problems.created_by = users.id where problems.id = ?"#,
 		problem_id,
 	)
 	.fetch_optional(&state.database)

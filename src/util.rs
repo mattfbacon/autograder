@@ -19,7 +19,7 @@ pub fn deserialize_textarea<'de, D: serde::de::Deserializer<'de>>(
 			E: serde::de::Error,
 		{
 			let mut ret = v.trim().replace("\r\n", "\n");
-			if !ret.ends_with('\n') {
+			if !ret.is_empty() && !ret.ends_with('\n') {
 				ret.push('\n');
 			}
 			Ok(ret)

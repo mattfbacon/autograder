@@ -12,6 +12,7 @@ use crate::model::Language;
 #[serde(tag = "command")]
 enum Command<'a> {
 	Test(&'a Test<'a>),
+	ValidateJudger { judger: &'a str },
 	Versions,
 }
 
@@ -153,6 +154,7 @@ pub struct Test<'a> {
 	pub time_limit: u32,
 	pub code: &'a str,
 	pub tests: &'a str,
+	pub custom_judger: Option<&'a str>,
 }
 
 impl Sandbox {
@@ -194,6 +196,10 @@ impl Sandbox {
 
 	pub async fn test(&self, test: &Test<'_>) -> Result<TestResponse, Error> {
 		self.run_command(Command::Test(test)).await
+	}
+
+	pub async fn validate_judger(&self, judger: &str) -> Result<Result<(), String>, Error> {
+		self.run_command(Command::ValidateJudger { judger }).await
 	}
 
 	/// The indices of these strings indicate the language that they are associated with.

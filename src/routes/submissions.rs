@@ -19,7 +19,7 @@ pub async fn do_judge(
 	submission_id: SubmissionId,
 ) -> Result<Response, ErrorResponse> {
 	let Some(submission) = query!(
-		r#"select code, language as "language: Language", problems.memory_limit as "memory_limit: u32", problems.time_limit as "time_limit: u32", problems.tests from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?"#,
+		r#"select code, language as "language: Language", problems.memory_limit as "memory_limit: u32", problems.time_limit as "time_limit: u32", problems.tests, problems.custom_judger from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?"#,
 		submission_id
 	)
 	.fetch_optional(&state.database)
@@ -37,6 +37,7 @@ pub async fn do_judge(
 			time_limit: submission.time_limit,
 			code: &submission.code,
 			tests: &submission.tests,
+			custom_judger: submission.custom_judger.as_deref(),
 		})
 		.await
 		.map_err(ErrorResponse::internal)?;

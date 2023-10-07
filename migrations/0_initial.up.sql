@@ -6,6 +6,7 @@ create table problems (
 	memory_limit integer not null,
 	visible integer not null,
 	tests text not null,
+	custom_judger text,
 	creation_time integer not null,
 	created_by integer references users on delete set null
 ) strict;

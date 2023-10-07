@@ -1,5 +1,6 @@
 import cbor2
 import errno
+import importlib.util
 import os
 import resource
 import subprocess
@@ -33,6 +34,15 @@ def compile_run(args: list[str]) -> None:
 	if output.returncode != 0:
 		reason = f'While running {repr(args)}:\n\n' + output.stdout
 		write_output({ 'InvalidProgram': reason })
+
+# <https://stackoverflow.com/a/53080237>
+def module_from_str(name: str, source: str) -> Any:
+	spec = importlib.util.spec_from_loader(name, loader=None)
+	assert spec is not None
+	module = importlib.util.module_from_spec(spec)
+	exec(source, module.__dict__)
+	return module
+
 
 # Based on <https://stackoverflow.com/questions/26475636/measure-elapsed-time-amount-of-memory-and-cpu-used-by-the-extern-program>.
 class ResourcePopen(subprocess.Popen):
@@ -179,6 +189,8 @@ LANGUAGE_FUNCS: list[tuple[Callable[[str], str], Callable[[str], list[str]], Cal
 def do_test(command):
 	(compile, run, _version) = LANGUAGE_FUNCS[command['language']]
 
+	judger: Callable[[int, str, str, str], bool] = module_from_str('judger', j).judge if (j := command.get('custom_judger')) is not None and len(j) > 0 else lambda _i, _input_case, expected_output, actual_output: expected_output == actual_output
+
 	compiled_path = compile(command['code'])
 	args = run(compiled_path)
 
@@ -189,7 +201,10 @@ def do_test(command):
 	tests = parse_tests(command['tests'])
 	passes = []
 
-	for (input, expected_output) in tests:
+	for i, (input, expected_output) in enumerate(tests):
+		input = input.strip() + '\n'
+		expected_output = expected_output.strip()
+
 		before = time.perf_counter_ns()
 		stdout, return_code, did_timeout, memory_usage = resource_call(args, input, timeout)
 		after = time.perf_counter_ns()
@@ -202,7 +217,7 @@ def do_test(command):
 			pass_result = 'MemoryLimitExceeded'
 		elif return_code != 0:
 			pass_result = 'RuntimeError'
-		elif stdout is not None and stdout.strip() == expected_output:
+		elif stdout is not None and judger(i, input, expected_output, stdout.strip()):
 			pass_result = 'Correct'
 		else:
 			pass_result = 'Wrong'
@@ -210,6 +225,17 @@ def do_test(command):
 		passes.append({ 'kind': pass_result, 'time': elapsed_time, 'memory_usage': max(0, memory_usage - memory_baseline) })
 
 	return { 'Ok': passes }
+
+def do_validate_judger(command):
+	judger = command['judger']
+	try:
+		judge = module_from_str('judger', judger).judge
+		ret = judge(1, 'a', 'b', 'c')
+		assert type(ret) == 'bool'
+	except:
+		return { 'Err': str(sys.exception()) }
+	return { 'Ok': None }
+
 
 def do_versions(_command):
 	return [version() for (_compile, _run, version) in LANGUAGE_FUNCS]
@@ -220,7 +246,7 @@ def do_versions(_command):
 with open('/input/command', 'rb') as command_file:
 	command = cbor2.load(command_file)
 
-COMMANDS = { 'Test': do_test, 'Versions': do_versions }
+COMMANDS = { 'Test': do_test, 'Versions': do_versions, 'ValidateJudger': do_validate_judger }
 
 response = COMMANDS[command['command']](command)
 write_output(response)
