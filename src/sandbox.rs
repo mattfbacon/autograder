@@ -80,6 +80,7 @@ fn run_container(image_id: &str, raw_command: &[u8]) -> Result<Vec<u8>, Error> {
 			"--network=none",
 			"--mount",
 			&format!("type=bind,source={temp_dir},destination=/input,readonly"),
+			"--cap-add=SYS_ADMIN",
 			image_id,
 		])
 		.output()

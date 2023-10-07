@@ -13,6 +13,7 @@ from typing import Callable, Any, NoReturn
 
 COMPILATION_TIMEOUT = 5
 VERSION_TIMEOUT = 10
+COMMAND_PATH = 'command'
 
 
 # Utilities.
@@ -243,8 +244,9 @@ def do_versions(_command):
 
 # Driver code.
 
-with open('/input/command', 'rb') as command_file:
+with open(COMMAND_PATH, 'rb') as command_file:
 	command = cbor2.load(command_file)
+os.remove(COMMAND_PATH)
 
 COMMANDS = { 'Test': do_test, 'Versions': do_versions, 'ValidateJudger': do_validate_judger }
 
