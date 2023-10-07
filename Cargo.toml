@@ -37,6 +37,7 @@ tower-layer = "0.3"
 tower-service = "0.3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+zip = { version = "0.6", default_features = false, features = ["deflate"] }
 
 [patch.crates-io]
 mail-send = { git = "https://github.com/mattfbacon/mail-send" }

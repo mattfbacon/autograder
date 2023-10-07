@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "select tests as \"tests: Tests\", created_by from problems where id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "tests: Tests",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_by",
+        "ordinal": 1,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "16f22835f5579880815096374c87c5b143de8be4a68a2ebbd1d5f61784cfa327"
+}

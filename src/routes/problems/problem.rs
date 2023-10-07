@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::sync::Arc;
 
 use axum::extract;
@@ -121,6 +122,54 @@ async fn delete_handler(
 	Ok(Redirect::to("/problems").into_response())
 }
 
+async fn download_cases(
+	extract::State(state): extract::State<Arc<State>>,
+	user: Option<User>,
+	extract::Path(problem_id): extract::Path<ProblemId>,
+) -> Result<Response, Response> {
+	let Some(problem) = query!(
+		r#"select tests as "tests: Tests", created_by from problems where id = ?"#,
+		problem_id,
+	)
+	.fetch_optional(&state.database)
+	.await
+	.map_err(error::internal(user.as_ref()))?
+	else {
+		return Err(error::not_found(user.as_ref()).await);
+	};
+
+	if !can_edit(user.as_ref(), problem.created_by) {
+		return Err(error::fake_not_found(user.as_ref()).await);
+	}
+
+	let mut zip_buf = Vec::new();
+	let mut zip = zip::ZipWriter::new(std::io::Cursor::new(&mut zip_buf));
+	let zip_options =
+		zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Stored);
+
+	for (i, (input, output)) in problem.tests.cases().enumerate() {
+		let i = i + 1;
+
+		zip.start_file(format!("{i}.in"), zip_options).unwrap();
+		zip.write_all(input.as_bytes()).unwrap();
+		zip.start_file(format!("{i}.out"), zip_options).unwrap();
+		zip.write_all(output.as_bytes()).unwrap();
+	}
+
+	zip.finish().unwrap();
+	drop(zip);
+
+	let content_disposition = format!("attachment; filename=\"{problem_id}.zip\"");
+	let response = (
+		[
+			("Content-Disposition", content_disposition.as_str()),
+			("Content-Type", "application/zip"),
+		],
+		zip_buf,
+	);
+	Ok(response.into_response())
+}
+
 #[derive(Debug, Deserialize)]
 struct Post {
 	language: Language,
@@ -189,6 +238,7 @@ async fn handler(
 				form method="post" action={"/problem/"(problem_id)"/delete"} { input type="submit" value="Delete"; }
 				@if user.as_ref().is_some_and(|user| user.permission_level >= PermissionLevel::Admin) {
 					a href={"/admin/submissions?problem_id="(problem_id)} { "View submissions" }
+					a href={"/problem/"(problem_id)"/cases"} { "Download cases" }
 				}
 			}
 		}
@@ -246,6 +296,7 @@ pub fn router() -> axum::Router<Arc<State>> {
 	let router = axum::Router::new()
 		.route("/", get(handler).post(handler))
 		.route("/edit", get(edit_handler).post(edit_handler))
-		.route("/delete", post(delete_handler));
+		.route("/delete", post(delete_handler))
+		.route("/cases", get(download_cases));
 	axum::Router::new().nest("/:id", router)
 }
