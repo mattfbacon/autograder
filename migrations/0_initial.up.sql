@@ -3,7 +3,6 @@ create table problems (
 	name text not null,
 	description text not null,
 	time_limit integer not null,
-	memory_limit integer not null,
 	visible integer not null,
 	tests text not null,
 	custom_judger text,

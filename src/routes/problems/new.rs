@@ -29,7 +29,6 @@ pub struct Problem {
 	pub description: String,
 
 	pub time_limit: u32,
-	pub memory_limit: u32,
 	#[serde(default)]
 	pub visible: bool,
 
@@ -41,7 +40,6 @@ pub struct Problem {
 }
 
 const DEFAULT_TIME_LIMIT: u32 = 1000;
-const DEFAULT_MEMORY_LIMIT: u32 = 8;
 
 const EXAMPLE_TESTS: &str = "\
 first input
@@ -79,7 +77,7 @@ async fn handle_post(
 	}
 
 	let now = now();
-	let id = query_scalar!("insert into problems (name, description, time_limit, memory_limit, visible, tests, custom_judger, creation_time, created_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?) returning id", post.name, post.description, post.time_limit, post.memory_limit, post.visible, post.tests, post.custom_judger, now, user.id).fetch_one(&state.database).await.map_err(ErrorResponse::internal)?;
+	let id = query_scalar!("insert into problems (name, description, time_limit, visible, tests, custom_judger, creation_time, created_by) values (?, ?, ?, ?, ?, ?, ?, ?) returning id", post.name, post.description, post.time_limit, post.visible, post.tests, post.custom_judger, now, user.id).fetch_one(&state.database).await.map_err(ErrorResponse::internal)?;
 	Ok(id)
 }
 
@@ -96,10 +94,6 @@ pub fn problem_form(old: Option<&Problem>) -> maud::Markup {
 		label {
 			"Time limit (milliseconds)"
 			input type="number" required name="time_limit" value=(old.map_or(DEFAULT_TIME_LIMIT, |post| post.time_limit));
-		}
-		label {
-			"Memory limit (MB)"
-			input type="number" required name="memory_limit" value=(old.map_or(DEFAULT_MEMORY_LIMIT, |post| post.memory_limit));
 		}
 		label {
 			"Visible"

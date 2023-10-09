@@ -132,7 +132,6 @@ enum_to_ty!(crate::sandbox::CaseResultKind, char, case_result_to_char, case_resu
 	Wrong => 'w',
 	RuntimeError => 'r',
 	TimeLimitExceeded => 't',
-	MemoryLimitExceeded => 'm',
 });
 
 impl crate::sandbox::TestResponse {
@@ -146,14 +145,7 @@ impl crate::sandbox::TestResponse {
 				let mut all_correct = true;
 				for case in cases {
 					all_correct &= matches!(case.kind, crate::sandbox::CaseResultKind::Correct);
-					write!(
-						buf,
-						"{},{},{};",
-						case_result_to_char(case.kind),
-						case.memory_usage,
-						case.time,
-					)
-					.unwrap();
+					write!(buf, "{},{};", case_result_to_char(case.kind), case.time).unwrap();
 				}
 
 				buf[0] = if all_correct { b'o' } else { b'e' };
@@ -183,8 +175,7 @@ impl std::str::FromStr for crate::sandbox::TestResponse {
 					let cases = rest
 						.split_terminator(';')
 						.map(|case| {
-							let (kind, rest) = case.split_once(',')?;
-							let (memory_usage, time) = rest.split_once(',')?;
+							let (kind, time) = case.split_once(',')?;
 
 							let kind = {
 								let mut chars = kind.chars();
@@ -194,13 +185,8 @@ impl std::str::FromStr for crate::sandbox::TestResponse {
 								}
 								case_result_from_char(first)?
 							};
-							let memory_usage = memory_usage.parse().ok()?;
 							let time = time.parse().ok()?;
-							Some(crate::sandbox::CaseResult {
-								kind,
-								memory_usage,
-								time,
-							})
+							Some(crate::sandbox::CaseResult { kind, time })
 						})
 						.collect::<Option<Vec<_>>>()?;
 					TR::Ok(cases)

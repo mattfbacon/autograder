@@ -22,7 +22,6 @@ pub enum CaseResultKind {
 	Wrong,
 	RuntimeError,
 	TimeLimitExceeded,
-	MemoryLimitExceeded,
 }
 
 impl CaseResultKind {
@@ -32,7 +31,6 @@ impl CaseResultKind {
 			Self::Wrong => "Wrong ❌",
 			Self::RuntimeError => "Runtime error 💥",
 			Self::TimeLimitExceeded => "Time Exceeded ⌛",
-			Self::MemoryLimitExceeded => "Memory Exceeded 📚",
 		}
 	}
 }
@@ -40,8 +38,6 @@ impl CaseResultKind {
 #[derive(Debug, Clone, Copy, Deserialize)]
 pub struct CaseResult {
 	pub kind: CaseResultKind,
-	/// In bytes.
-	pub memory_usage: u32,
 	/// In milliseconds.
 	pub time: u32,
 }
@@ -151,7 +147,6 @@ pub struct Sandbox {
 #[derive(Debug, Serialize)]
 pub struct Test<'a> {
 	pub language: Language,
-	pub memory_limit: u32,
 	pub time_limit: u32,
 	pub code: &'a str,
 	pub tests: &'a str,

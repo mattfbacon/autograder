@@ -19,7 +19,7 @@ pub async fn do_judge(
 	submission_id: SubmissionId,
 ) -> Result<Response, ErrorResponse> {
 	let Some(submission) = query!(
-		r#"select code, language as "language: Language", problems.memory_limit as "memory_limit: u32", problems.time_limit as "time_limit: u32", problems.tests, problems.custom_judger from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?"#,
+		r#"select code, language as "language: Language", problems.time_limit as "time_limit: u32", problems.tests, problems.custom_judger from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?"#,
 		submission_id
 	)
 	.fetch_optional(&state.database)
@@ -33,7 +33,6 @@ pub async fn do_judge(
 		.sandbox
 		.test(&Test {
 			language: submission.language,
-			memory_limit: submission.memory_limit,
 			time_limit: submission.time_limit,
 			code: &submission.code,
 			tests: &submission.tests,
@@ -109,13 +108,11 @@ async fn handler(
 						th { "#" }
 						th { "Result" }
 						th { "Time" }
-						th { "Memory usage" }
 					} }
 					tbody { @for (i, case) in cases.iter().enumerate() { tr {
 						td { (i + 1) }
 						td { (case.kind.as_str()) }
 						td { (case.time) " ms" }
-						td title={(case.memory_usage) " bytes"} { (humansize::format_size(case.memory_usage, humansize::DECIMAL)) }
 					} } }
 				}
 			},

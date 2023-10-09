@@ -45,45 +45,6 @@ def module_from_str(name: str, source: str) -> Any:
 	return module
 
 
-# Based on <https://stackoverflow.com/questions/26475636/measure-elapsed-time-amount-of-memory-and-cpu-used-by-the-extern-program>.
-class ResourcePopen(subprocess.Popen):
-	rusage: resource.struct_rusage
-
-	def _try_wait(self, wait_flags: int) -> tuple[int, int]:
-		try:
-			pid, status, rusage = os.wait4(self.pid, wait_flags)
-		except OSError as e:
-			if e.errno != errno.ECHILD:
-				raise
-			# Child is dead.
-			pid = self.pid
-			status = 0
-		else:
-			self.rusage = rusage
-		return pid, status
-
-# Returns (stdout, return code, timeout?, memory usage in bytes)
-def resource_call(args: list[str], input: str, timeout: int) -> tuple[str | None, int, bool, int]:
-	with ResourcePopen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, encoding='utf8') as process:
-		try:
-			(stdout, _stderr) = process.communicate(input=input, timeout=timeout)
-			return_code = process.poll()
-			assert return_code is not None
-			return stdout, return_code, False, process.rusage.ru_maxrss * 1024
-		except subprocess.TimeoutExpired as e:
-			process.kill()
-			process.wait()
-			return e.output, 1, True, process.rusage.ru_maxrss * 1024
-		except:
-			process.kill()
-			process.wait()
-			raise
-
-def find_memory_baseline() -> int:
-	ITERS = 3
-	return round(sum(resource_call(['true'], '', 1_000)[3] for _ in range(ITERS)) / ITERS)
-
-
 # Language-specific code.
 # - Compile functions take in code as text and return a file path which will be forwarded to the run function.
 # - Run functions take in the path returned from `compile` and return arguments for the process to spawn.
@@ -195,8 +156,6 @@ def do_test(command):
 	compiled_path = compile(command['code'])
 	args = run(compiled_path)
 
-	memory_baseline = find_memory_baseline()
-	memory_limit = command['memory_limit'] * 1_000_000 + memory_baseline
 	timeout = command['time_limit'] / 1000
 
 	tests = parse_tests(command['tests'])
@@ -207,23 +166,24 @@ def do_test(command):
 		expected_output = expected_output.strip()
 
 		before = time.perf_counter_ns()
-		stdout, return_code, did_timeout, memory_usage = resource_call(args, input, timeout)
-		after = time.perf_counter_ns()
+
+		try:
+			result = subprocess.run(args, input=input, timeout=timeout, encoding='utf-8', capture_output=True)
+			after = time.perf_counter_ns()
+
+			if result.returncode != 0:
+				pass_result = 'RuntimeError'
+			elif result.stdout is not None and judger(i, input, expected_output, result.stdout.strip()):
+				pass_result = 'Correct'
+			else:
+				pass_result = 'Wrong'
+		except subprocess.TimeoutExpired:
+			pass_result = 'TimeLimitExceeded'
+			after = time.perf_counter_ns()
 
 		elapsed_time = (after - before) // 1_000_000
 
-		if did_timeout:
-			pass_result = 'TimeLimitExceeded'
-		elif memory_usage > memory_limit:
-			pass_result = 'MemoryLimitExceeded'
-		elif return_code != 0:
-			pass_result = 'RuntimeError'
-		elif stdout is not None and judger(i, input, expected_output, stdout.strip()):
-			pass_result = 'Correct'
-		else:
-			pass_result = 'Wrong'
-
-		passes.append({ 'kind': pass_result, 'time': elapsed_time, 'memory_usage': max(0, memory_usage - memory_baseline) })
+		passes.append({ 'kind': pass_result, 'time': elapsed_time })
 
 	return { 'Ok': passes }
 
@@ -232,9 +192,9 @@ def do_validate_judger(command):
 	try:
 		judge = module_from_str('judger', judger).judge
 		ret = judge(1, 'a', 'b', 'c')
-		assert type(ret) == 'bool'
+		assert type(ret) == bool, f'expected handler to return bool but got {type(ret)}'
 	except:
-		return { 'Err': str(sys.exception()) }
+		return { 'Err': str(sys.exc_info()[1]) }
 	return { 'Ok': None }
 
 

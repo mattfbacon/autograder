@@ -46,7 +46,7 @@ async fn handle_edit_post(
 			})?;
 	}
 
-	query!("update problems set name = ?, description = ?, time_limit = ?, memory_limit = ?, visible = ?, tests = ?, custom_judger = ? where id = ?", post.name, post.description, post.time_limit, post.memory_limit, post.visible, post.tests, post.custom_judger, problem_id).execute(&state.database).await.map_err(ErrorResponse::internal)?;
+	query!("update problems set name = ?, description = ?, time_limit = ?, visible = ?, tests = ?, custom_judger = ? where id = ?", post.name, post.description, post.time_limit, post.visible, post.tests, post.custom_judger, problem_id).execute(&state.database).await.map_err(ErrorResponse::internal)?;
 
 	Ok(())
 }
@@ -76,7 +76,7 @@ async fn edit_handler(
 
 	let Some(problem) = query_as!(
 		super::new::Problem,
-		r#"select name, description, time_limit as "time_limit: u32", memory_limit as "memory_limit: u32", visible as "visible: bool", tests, custom_judger from problems inner join users on problems.created_by = users.id where problems.id = ?"#,
+		r#"select name, description, time_limit as "time_limit: u32", visible as "visible: bool", tests, custom_judger from problems inner join users on problems.created_by = users.id where problems.id = ?"#,
 		problem_id,
 	)
 	.fetch_optional(&state.database)

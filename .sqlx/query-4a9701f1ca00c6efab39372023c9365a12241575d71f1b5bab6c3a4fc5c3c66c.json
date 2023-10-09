@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "select code, language as \"language: Language\", problems.memory_limit as \"memory_limit: u32\", problems.time_limit as \"time_limit: u32\", problems.tests, problems.custom_judger from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?",
+  "query": "select code, language as \"language: Language\", problems.time_limit as \"time_limit: u32\", problems.tests, problems.custom_judger from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?",
   "describe": {
     "columns": [
       {
@@ -14,23 +14,18 @@
         "type_info": "Int64"
       },
       {
-        "name": "memory_limit: u32",
+        "name": "time_limit: u32",
         "ordinal": 2,
         "type_info": "Int64"
       },
       {
-        "name": "time_limit: u32",
-        "ordinal": 3,
-        "type_info": "Int64"
-      },
-      {
         "name": "tests",
-        "ordinal": 4,
+        "ordinal": 3,
         "type_info": "Text"
       },
       {
         "name": "custom_judger",
-        "ordinal": 5,
+        "ordinal": 4,
         "type_info": "Text"
       }
     ],
@@ -42,9 +37,8 @@
       false,
       false,
       false,
-      false,
       true
     ]
   },
-  "hash": "1f13225de504bf5751bf52b0d6212989399b6b7a30bf914270a730864d6caef6"
+  "hash": "4a9701f1ca00c6efab39372023c9365a12241575d71f1b5bab6c3a4fc5c3c66c"
 }
