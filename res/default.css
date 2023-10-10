@@ -114,7 +114,6 @@ main {
 	padding: var(--space-s);
 	flex: 1;
 	width: 100%;
-	max-width: 90rem;
 }
 
 main, details .details {
@@ -225,4 +224,9 @@ table {
 	.if-narrow {
 		display: none;
 	}
+}
+
+.query-block {
+	max-width: 100%;
+	overflow-x: scroll;
 }

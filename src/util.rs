@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 pub fn percent_encode(raw: &[u8]) -> percent_encoding::PercentEncode<'_> {
 	percent_encoding::percent_encode(raw, percent_encoding::NON_ALPHANUMERIC)
 }
@@ -194,4 +196,16 @@ pub fn display_fn<F: Fn(&mut std::fmt::Formatter<'_>) -> std::fmt::Result>(
 	}
 
 	Helper(f)
+}
+
+pub fn render_debug(value: impl Debug) -> impl maud::Render {
+	struct Helper<T>(T);
+
+	impl<T: Debug> maud::Render for Helper<T> {
+		fn render_to(&self, w: &mut String) {
+			format_args!("{0:?}", self.0).render_to(w);
+		}
+	}
+
+	Helper(value)
 }
