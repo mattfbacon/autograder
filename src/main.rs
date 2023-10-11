@@ -20,6 +20,8 @@
 
 use std::sync::Arc;
 
+use bindable::BindableAddr;
+use hyperlocal::UnixServerExt;
 use once_cell::sync::Lazy;
 use sqlx::{query, SqlitePool};
 
@@ -87,13 +89,23 @@ async fn main() {
 		.with_state(state)
 		.nest("/res", resources());
 
-	let address = ([127, 0, 0, 1], 3000).into();
-
+	let address = &CONFIG.address;
 	tracing::info!("serving at {address}");
-	axum::Server::bind(&address)
-		.serve(app.into_make_service())
-		.await
-		.expect("running server");
+	match address {
+		BindableAddr::Tcp(address) => {
+			axum::Server::bind(address)
+				.serve(app.into_make_service())
+				.await
+		}
+		BindableAddr::Unix(path) => {
+			_ = std::fs::remove_file(path);
+			axum::Server::bind_unix(path)
+				.unwrap_or_else(|error| panic!("binding to {path:?}: {error}"))
+				.serve(app.into_make_service())
+				.await
+		}
+	}
+	.expect("running server");
 }
 
 async fn clear_expired_tokens(database: SqlitePool) {

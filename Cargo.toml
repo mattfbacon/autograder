@@ -8,11 +8,15 @@ version = "0.1.0"
 [dependencies]
 axum = "0.6"
 bcrypt = "0.15"
+bindable = "0.1"
 bytes = "1"
 ciborium = "0.2"
 cookie = { version = "0.17", features = ["percent-encode"] }
 futures-util = "0.3"
 hex = "0.4"
+hyperlocal = { version = "0.8", default_features = false, features = [
+	"server",
+] }
 mail-builder = "0.3"
 mail-send = { version = "0.4", default_features = false, features = [
 	"builder",

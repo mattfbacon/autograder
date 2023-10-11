@@ -1,9 +1,12 @@
+use bindable::BindableAddr;
+
 #[derive(serde::Deserialize)]
 pub struct Config {
 	/// Required for external links.
-	pub url: String,
+	pub external_url: String,
 	pub admin_email: String,
 	pub smtp: Smtp,
+	pub address: BindableAddr,
 }
 
 #[derive(serde::Deserialize)]

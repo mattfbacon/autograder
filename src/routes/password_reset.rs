@@ -160,7 +160,7 @@ To set your new password, please go to <https://{url}/password-reset/do-reset?us
 If this was not you, you can ignore this email. If your email should not be associated with this account at all, please go to <https://{url}/password-reset/remove-email?user={user_id}&key={remove_email_key}>.
 ",
 		username = post.username,
-		url = crate::CONFIG.url,
+		url = crate::CONFIG.external_url,
 		user_id = user.id,
 		remove_email_key = user.remove_email_key,
 	);
