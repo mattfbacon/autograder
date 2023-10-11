@@ -46,6 +46,6 @@ mail-send = { git = "https://github.com/mattfbacon/mail-send" }
 
 # Using `mail-send` from git tries to also use other crates from Git, which we don't want.
 [patch."https://github.com/stalwartlabs/mail-builder"]
-mail-builder = { version = "0.3" }
+mail-builder = { version = "=0.3.1" }
 [patch."https://github.com/stalwartlabs/smtp-proto"]
-smtp-proto = { version = "0.1.1" }
+smtp-proto = { version = "=0.1.1" }
