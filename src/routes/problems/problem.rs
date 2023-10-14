@@ -226,8 +226,10 @@ async fn handler(
 		None
 	};
 
+	let user_id = user.as_ref().map(|user| user.id);
 	let Some(problem) = query!(
-		r#"select name, description, problems.creation_time as "creation_time: Timestamp", users.id as "created_by_id?", users.display_name as "created_by_name?", (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", tests as "tests: Tests" from problems left join users on problems.created_by = users.id where problems.id = ?"#,
+		r#"select name, description, problems.creation_time as "creation_time: Timestamp", users.id as "created_by_id?", users.display_name as "created_by_name?", (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", (select count(*) > 0 from submissions where for_problem = problems.id and submitter = ?1 and result like 'o%') as "user_solved!: bool", tests as "tests: Tests" from problems left join users on problems.created_by = users.id where problems.id = ?2"#,
+		user_id,
 		problem_id,
 	)
 	.fetch_optional(&state.database)
@@ -276,6 +278,9 @@ async fn handler(
 
 		hr;
 		h2 { "Submit your solution" }
+		@if problem.user_solved {
+			p { "You have already solved this problem :)" }
+		}
 		form method="post" {
 			label {
 				"Language"

@@ -48,8 +48,10 @@ async fn handler(
 	.await
 	.map_err(error::internal(user.as_ref()))?;
 
+	let user_id = user.as_ref().map(|user| user.id);
 	let problems = query!(
-		r#"select id as "id!", name, (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", visible as "visible: bool", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64" from problems where ? or visible = 1 order by problems.id limit ? offset ?"#,
+		r#"select id as "id!", name, (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", visible as "visible: bool", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", (select count(*) > 0 from submissions where for_problem = problems.id and submitter = ? and result like 'o%') as "user_solved!: bool" from problems where ? or visible = 1 order by problems.id limit ? offset ?"#,
+		user_id,
 		show_invisible,
 		limit,
 		offset,
@@ -65,6 +67,7 @@ async fn handler(
 				th { "Title" }
 				th { "# Submissions" }
 				th { "Pass Rate" }
+				th { "Completed" }
 				@if show_invisible {
 					th { "Visible" }
 				}
@@ -78,6 +81,13 @@ async fn handler(
 						(pass_rate) "%"
 					} @else {
 						"N/A"
+					}
+				}
+				td title={ "You have " (if problem.user_solved { "" } else { "not " }) "completed this problem" } {
+					@if problem.user_solved {
+						"Yes"
+					} @else {
+						"No"
 					}
 				}
 				@if show_invisible {
