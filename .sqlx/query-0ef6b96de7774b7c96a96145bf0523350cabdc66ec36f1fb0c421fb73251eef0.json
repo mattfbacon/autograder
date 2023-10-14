@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "select submitter, problems.created_by as problem_author from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "submitter",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "problem_author",
+        "ordinal": 1,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "0ef6b96de7774b7c96a96145bf0523350cabdc66ec36f1fb0c421fb73251eef0"
+}

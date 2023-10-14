@@ -8,7 +8,7 @@ use sqlx::query;
 
 use crate::error::ErrorResponse;
 use crate::extract::auth::User;
-use crate::model::{Language, PermissionLevel, SubmissionId};
+use crate::model::{Language, PermissionLevel, SubmissionId, UserId};
 use crate::sandbox::{Test, TestResponse};
 use crate::template::page;
 use crate::time::{now, Timestamp};
@@ -56,14 +56,99 @@ pub async fn do_judge(
 	Ok(Redirect::to(&format!("/submission/{submission_id}")).into_response())
 }
 
+#[derive(Debug, Clone, Copy)]
+enum SubmissionPermissionLevel {
+	None,
+	View,
+	Edit,
+}
+
+impl SubmissionPermissionLevel {
+	pub fn can_view(self) -> bool {
+		match self {
+			Self::None => false,
+			Self::View | Self::Edit => true,
+		}
+	}
+
+	pub fn can_edit(self) -> bool {
+		match self {
+			Self::None | Self::View => false,
+			Self::Edit => true,
+		}
+	}
+}
+
+fn permission_level(
+	login_user: Option<&User>,
+	submitter: UserId,
+	problem_author: Option<UserId>,
+) -> SubmissionPermissionLevel {
+	let Some(login_user) = login_user else {
+		return SubmissionPermissionLevel::None;
+	};
+
+	if login_user.permission_level >= PermissionLevel::Admin || login_user.id == submitter {
+		return SubmissionPermissionLevel::Edit;
+	}
+
+	if problem_author.is_some_and(|problem_author| {
+		login_user.permission_level >= PermissionLevel::ProblemAuthor && login_user.id == problem_author
+	}) {
+		return SubmissionPermissionLevel::View;
+	}
+
+	SubmissionPermissionLevel::None
+}
+
 async fn rejudge(
 	extract::State(state): extract::State<Arc<State>>,
 	user: Option<User>,
 	extract::Path(submission_id): extract::Path<SubmissionId>,
-) -> Response {
+) -> Result<Response, Response> {
+	let Some(submission) = query!("select submitter, problems.created_by as problem_author from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?", submission_id).fetch_optional(&state.database).await.map_err(error::internal(user.as_ref()))? else {
+		return Err(error::not_found(user.as_ref()).await);
+	};
+
+	let permission_level = permission_level(
+		user.as_ref(),
+		submission.submitter,
+		submission.problem_author,
+	);
+
+	if !permission_level.can_edit() {
+		return Err(error::fake_not_found(user.as_ref()).await);
+	}
+
 	do_judge(&state, submission_id)
 		.await
-		.unwrap_or_else(|error| error.into_response(user.as_ref()))
+		.map_err(|error| error.into_response(user.as_ref()))
+}
+
+async fn delete(
+	extract::State(state): extract::State<Arc<State>>,
+	user: Option<User>,
+	extract::Path(submission_id): extract::Path<SubmissionId>,
+) -> Result<Response, Response> {
+	let Some(submission) = query!("select submitter, for_problem, problems.created_by as problem_author from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?", submission_id).fetch_optional(&state.database).await.map_err(error::internal(user.as_ref()))? else {
+		return Err(error::not_found(user.as_ref()).await);
+	};
+
+	let permission_level = permission_level(
+		user.as_ref(),
+		submission.submitter,
+		submission.problem_author,
+	);
+
+	if !permission_level.can_edit() {
+		return Err(error::fake_not_found(user.as_ref()).await);
+	}
+
+	query!("delete from submissions where id = ?", submission_id)
+		.execute(&state.database)
+		.await
+		.map_err(error::internal(user.as_ref()))?;
+	Ok(Redirect::to(&format!("/problem/{}", submission.for_problem)).into_response())
 }
 
 async fn handler(
@@ -75,23 +160,20 @@ async fn handler(
 		return Err(error::not_found(user.as_ref()).await);
 	};
 
-	let can_access = user.as_ref().is_some_and(|user| {
-		// Administrator.
-		user.permission_level >= PermissionLevel::Admin
-		// Problem author who created the problem.
-		|| submission.problem_author.is_some_and(|problem_author| {
-			user.permission_level >= PermissionLevel::ProblemAuthor
-			&& user.id == problem_author
-		})
-		// User who made this submission.
-		|| (user.id == submission.submitter)
-	});
-	if !can_access {
+	let permission_level = permission_level(
+		user.as_ref(),
+		submission.submitter,
+		submission.problem_author,
+	);
+	if !permission_level.can_view() {
 		return Err(error::fake_not_found(user.as_ref()).await);
 	}
 
 	let body = html! {
 		h1 { "Submission for " a href={"/problem/"(submission.problem_id)} { "Problem " (submission.problem_id) ": " (submission.problem_name) } }
+		@if permission_level.can_edit() {
+			form method="post" action={"/submission/"(submission_id)"/delete"} { input type="submit" value="Delete"; }
+		}
 		p { b {
 			"By " (submission.submitter_name)
 			" | Submitted at " (submission.submission_time)
@@ -138,6 +220,7 @@ async fn handler(
 pub fn router() -> axum::Router<Arc<State>> {
 	let router = axum::Router::new()
 		.route("/", get(handler))
+		.route("/delete", post(delete))
 		.route("/rejudge", post(rejudge));
 	axum::Router::new().nest("/submission/:id", router)
 }
