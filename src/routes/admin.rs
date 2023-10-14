@@ -58,7 +58,7 @@ async fn submissions(
 		details open[any_search] {
 			summary { "Search" }
 			form method="get" {
-				label { "Submitter name" input type="text" name="submitter" value=[search_submitter.as_deref()]; }
+				label { "Submitter name (display name)" input type="text" name="submitter" value=[search_submitter.as_deref()]; }
 				label { "Problem name" input type="text" name="problem" value=[search_problem.as_deref()]; }
 				label { "Problem ID" input type="number" name="problem_id" value=[search_problem_id]; }
 				div.row {
