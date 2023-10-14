@@ -30,10 +30,10 @@ def write_output(output: Any) -> NoReturn:
 	exit(0)
 
 # Return early and terminate the process if the process fails.
-def compile_run(args: list[str]) -> None:
+def compile_run(args: list[str], extra: str = '') -> None:
 	output = subprocess.run(args, timeout=COMPILATION_TIMEOUT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf8')
 	if output.returncode != 0:
-		reason = f'While running {repr(args)}:\n\n' + output.stdout
+		reason = f'While running {repr(args)}:\n\n' + output.stdout + extra
 		write_output({ 'InvalidProgram': reason })
 
 # <https://stackoverflow.com/a/53080237>
@@ -103,6 +103,7 @@ def version_cpp() -> str:
 JAVA = 'java'
 JAVAC = 'javac'
 JAR = 'jar'
+JAVA_EXTRA = "\nNote that the program's class should be named Main.\n"
 
 def compile_java(code: str) -> str:
 	main_class = 'Main'
@@ -110,15 +111,15 @@ def compile_java(code: str) -> str:
 	class_dir = 'classes'
 	jar = 'jar.jar'
 	write(path, code.encode())
-	compile_run([JAVAC, '-d', class_dir, '-encoding', 'UTF8', path])
-	compile_run([JAR, 'cfe', jar, main_class, '-C', class_dir, '.'])
+	compile_run([JAVAC, '-d', class_dir, '-encoding', 'UTF8', path], extra=JAVA_EXTRA)
+	compile_run([JAR, 'cfe', jar, main_class, '-C', class_dir, '.'], extra=JAVA_EXTRA)
 	return jar
 
 def run_java(path: str) -> list[str]:
 	return [JAVA, '-jar', path]
 
 def version_java() -> str:
-	return subprocess.run([JAVA, '--version'], encoding='utf8', capture_output=True, check=True).stdout + '\n' + subprocess.run([JAVAC, '--version'], encoding='utf8', capture_output=True, check=True).stdout
+	return subprocess.run([JAVA, '--version'], encoding='utf8', capture_output=True, check=True).stdout + '\n' + subprocess.run([JAVAC, '--version'], encoding='utf8', capture_output=True, check=True).stdout + JAVA_EXTRA
 
 
 RUSTC = 'rustc'
