@@ -123,8 +123,9 @@ pub fn problem_form(old: Option<&Problem>) -> maud::Markup {
 				p { "Custom judgers are Python scripts." }
 				p { "Export a function " code { "judge" } " with the following signature:" }
 				pre { code { (EXAMPLE_CUSTOM_JUDGER) } }
-				p { "You may wish to copy this as a sample into the Custom Judger field." }
-				p { "Your judger will undergo a limited amount of validation, but you should make a test submission to be safe." }
+				p { "You may wish to copy this into the Custom Judger field as a starting point." }
+				p { "Your judger will undergo a limited amount of validation. You should make a test submission." }
+				p { "If the judger throws an exception, the submission will be marked as an invalid program. If you are doing things like " code { "int(actual_output)" } ", you probably want to wrap the body in a try-except that returns False if an exception occurs." }
 			}
 		}
 	}

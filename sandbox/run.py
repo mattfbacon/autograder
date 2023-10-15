@@ -1,6 +1,7 @@
 import cbor2
 import errno
 import importlib.util
+import inspect
 import os
 import resource
 import subprocess
@@ -174,10 +175,12 @@ def do_test(command):
 
 			if result.returncode != 0:
 				pass_result = 'RuntimeError'
-			elif result.stdout is not None and judger(i, input, expected_output, result.stdout.strip()):
-				pass_result = 'Correct'
 			else:
-				pass_result = 'Wrong'
+				try:
+					ret = judger(i, input, expected_output, result.stdout.strip())
+					pass_result = 'Correct' if ret else 'Wrong'
+				except Exception as e:
+					write_output({ 'InvalidProgram': f'judger raised an exception: {e}' })
 		except subprocess.TimeoutExpired:
 			pass_result = 'TimeLimitExceeded'
 			after = time.perf_counter_ns()
@@ -192,8 +195,7 @@ def do_validate_judger(command):
 	judger = command['judger']
 	try:
 		judge = module_from_str('judger', judger).judge
-		ret = judge(1, 'a', 'b', 'c')
-		assert type(ret) == bool, f'expected handler to return bool but got {type(ret)}'
+		inspect.signature(judge)
 	except:
 		return { 'Err': str(sys.exc_info()[1]) }
 	return { 'Ok': None }
