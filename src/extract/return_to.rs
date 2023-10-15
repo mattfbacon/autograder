@@ -9,7 +9,7 @@ pub struct ReturnTo {
 pub fn add_to_path(path: &str, return_to: &str) -> String {
 	format!(
 		"{path}?returnto={}",
-		crate::util::percent_encode(return_to.as_bytes()),
+		crate::util::encode_query(return_to.as_bytes()),
 	)
 }
 

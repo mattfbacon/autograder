@@ -87,17 +87,21 @@ impl Pagination {
 		display_fn(move |fmt| write!(fmt, "page={}&page_size={}", self.page, self.page_size))
 	}
 
-	pub fn make_pager(self, num_entries: i64) -> maud::Markup {
+	pub fn make_pager(
+		self,
+		num_entries: i64,
+		additional_query: impl std::fmt::Display,
+	) -> maud::Markup {
 		html! {
 			p title={(num_entries) " submission"(s(num_entries)) " total"} {
 				@if let Some(prev) = self.prev(num_entries) {
-					a href={"?"(prev.query())} title={"Go to page " (prev.display_page())} { "Prev" }
+					a href={"?"(prev.query())(additional_query)} title={"Go to page " (prev.display_page())} { "Prev" }
 					" "
 				}
 				"Page " (self.display_page()) " of " (self.num_pages(num_entries))
 				@if let Some(next) = self.next(num_entries) {
 					" "
-					a href={"?"(next.query())} title={"Go to page " (next.display_page())} { "Next" }
+					a href={"?"(next.query())(additional_query)} title={"Go to page " (next.display_page())} { "Next" }
 				}
 			}
 		}

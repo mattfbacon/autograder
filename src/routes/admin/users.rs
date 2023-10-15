@@ -52,7 +52,7 @@ async fn users(
 			} } }
 		}
 		@if users.is_empty() { p { "Nothing here..." } }
-		(pagination.make_pager(num_users))
+		(pagination.make_pager(num_users, ""))
 	};
 
 	Ok(page("Users", Some(&user), &body).into_response())

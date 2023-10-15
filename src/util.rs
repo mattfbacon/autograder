@@ -1,7 +1,18 @@
 use std::fmt::Debug;
 
-pub fn percent_encode(raw: &[u8]) -> percent_encoding::PercentEncode<'_> {
-	percent_encoding::percent_encode(raw, percent_encoding::NON_ALPHANUMERIC)
+pub fn encode_query(raw: &[u8]) -> percent_encoding::PercentEncode<'_> {
+	const SET: percent_encoding::AsciiSet = percent_encoding::CONTROLS
+		.add(b';')
+		.add(b'/')
+		.add(b'?')
+		.add(b'@')
+		.add(b'&')
+		.add(b'=')
+		.add(b'+')
+		.add(b'$')
+		.add(b',');
+
+	percent_encoding::percent_encode(raw, &SET)
 }
 
 pub fn deserialize_textarea<'de, D: serde::de::Deserializer<'de>>(

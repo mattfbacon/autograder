@@ -15,6 +15,7 @@ use crate::model::{
 use crate::sandbox::{Test, TestResponse};
 use crate::template::page;
 use crate::time::{now, Timestamp};
+use crate::util::encode_query;
 use crate::{error, State};
 
 pub async fn do_judge(
@@ -234,8 +235,23 @@ macro_rules! search_query {
 		}
 
 		impl SubmissionsSearch {
-			pub fn any_set(&self) -> bool {
+			fn any_set(&self) -> bool {
 				$(self.$name.is_some())||*
+			}
+
+			fn to_query(&self) -> impl std::fmt::Display + '_ {
+				struct Helper<'a>(&'a SubmissionsSearch);
+
+				impl std::fmt::Display for Helper<'_> {
+					fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+						$(if let Some($name) = &self.0.$name {
+							write!(formatter, concat!("&", stringify!($name), "={}"), encode_query($name.to_string().as_bytes()))?;
+						})*
+						Ok(())
+					}
+				}
+
+				Helper(self)
 			}
 		}
 	};
@@ -295,6 +311,7 @@ async fn submissions(
 				label { "Problem ID" input type="number" name="problem_id" value=[search.problem_id]; }
 				div.row {
 					input type="submit" value="Search";
+					// Intentionally resets pagination, because it's probably not useful.
 					a href="/submissions" { "Stop searching" }
 				}
 			}
@@ -318,7 +335,7 @@ async fn submissions(
 			} } }
 		}
 		@if submissions.is_empty() { p { "Nothing here..." } }
-		(pagination.make_pager(num_submissions))
+		(pagination.make_pager(num_submissions, search.to_query()))
 	};
 
 	Ok(page("Submissions", Some(&user), &body).into_response())

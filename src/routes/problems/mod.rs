@@ -96,7 +96,7 @@ async fn handler(
 			} } }
 		}
 		@if problems.is_empty() { p { "Nothing here..." } }
-		(pagination.make_pager(num_problems))
+		(pagination.make_pager(num_problems, ""))
 	};
 
 	Ok(page("Problems", user.as_ref(), &body).into_response())
