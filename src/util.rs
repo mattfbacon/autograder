@@ -15,9 +15,7 @@ pub fn encode_query(raw: &[u8]) -> percent_encoding::PercentEncode<'_> {
 	percent_encoding::percent_encode(raw, &SET)
 }
 
-pub fn deserialize_textarea<'de, D: serde::de::Deserializer<'de>>(
-	de: D,
-) -> Result<String, D::Error> {
+pub fn deserialize_textarea<'de, D: serde::Deserializer<'de>>(de: D) -> Result<String, D::Error> {
 	struct Visitor;
 
 	impl<'de> serde::de::Visitor<'de> for Visitor {
