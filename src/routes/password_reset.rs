@@ -109,7 +109,7 @@ async fn do_reset(
 	Ok(page("Reset Password", login_user.as_ref(), &body).into_response())
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug)]
 struct Form {
 	username: String,
 }
@@ -165,22 +165,27 @@ If this was not you, you can ignore this email. If your email should not be asso
 		remove_email_key = user.remove_email_key,
 	);
 
-	let message = MessageBuilder::new()
-		.from(("Autograder", smtp.username.as_str()))
-		.to((user.display_name.as_str(), user_email.as_str()))
-		.subject("AutoGrader Password Recovery")
-		.text_body(body);
+	let send_fut = async move {
+		let message = MessageBuilder::new()
+			.from(("Autograder", smtp.username.as_str()))
+			.to((user.display_name.as_str(), user_email.as_str()))
+			.subject("AutoGrader Password Recovery")
+			.text_body(body);
 
-	SmtpClientBuilder::new(smtp.host.as_str(), smtp.port)
-		.helo_host("dummy.faircode.eu")
-		.implicit_tls(smtp.implicit_tls)
-		.credentials((smtp.username.as_str(), smtp.password.as_str()))
-		.connect()
-		.await
-		.map_err(ErrorResponse::internal)?
-		.send(message)
-		.await
-		.map_err(ErrorResponse::internal)?;
+		SmtpClientBuilder::new(smtp.host.as_str(), smtp.port)
+			.helo_host("dummy.faircode.eu")
+			.implicit_tls(smtp.implicit_tls)
+			.credentials((smtp.username.as_str(), smtp.password.as_str()))
+			.connect()
+			.await?
+			.send(message)
+			.await
+	};
+	tokio::spawn(async move {
+		if let Err(error) = send_fut.await {
+			tracing::error!(?post, "error sending email: {error}");
+		}
+	});
 
 	Ok(())
 }
@@ -210,10 +215,10 @@ async fn handler(
 		.and_then(|res| res.as_ref().err())
 		.map_or(StatusCode::OK, |error| error.status);
 	page = match &res {
-		Some(Ok(())) => page.with_banner(
-			BannerKind::Info,
-			"If the user exists and has an associated email address, an email was sent.",
-		),
+		Some(Ok(())) => {
+			let message = "If everything is in order, an email was sent. If you don't get an email, recheck your parameters, then contact the admin.";
+			page.with_banner(BannerKind::Info, message)
+		}
 		Some(Err(error)) => page.with_banner(BannerKind::Error, &error.message),
 		None => page,
 	};
