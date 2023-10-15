@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "select submissions.id as submission_id, problem.id as problem_id, problem.name as problem_name, submitter.id as submitter_id, submitter.display_name as submitter_name, language as \"language: Language\", submission_time as \"submission_time: Timestamp\", result as \"result: SimpleTestResponse\" from submissions inner join problems as problem on submissions.for_problem = problem.id inner join users as submitter on submissions.submitter = submitter.id where (?3 is null or instr(submitter.display_name, ?3) > 0) and (?4 is null or instr(problem.name, ?4) > 0) and (?5 is null or submissions.for_problem is ?5) and (?6 >= 20 or ?7 is submissions.submitter or (?6 >= 10 and ?7 is problem.created_by)) order by submissions.id desc limit ?1 offset ?2",
+  "query": "select submissions.id as submission_id, problem.id as problem_id, problem.name as problem_name, submitter.id as submitter_id, submitter.display_name as submitter_name, language as \"language: Language\", submission_time as \"submission_time: Timestamp\", result as \"result: SimpleTestResponse\" from submissions inner join problems as problem on submissions.for_problem = problem.id inner join users as submitter on submissions.submitter = submitter.id where (?3 is null or instr(submitter.display_name, ?3) > 0) and (?4 is null or submissions.submitter is ?4) and (?5 is null or instr(problem.name, ?5) > 0) and (?6 is null or submissions.for_problem is ?6) and (?7 >= 20 or ?8 is submissions.submitter or (?7 >= 10 and ?8 is problem.created_by)) order by submissions.id desc limit ?1 offset ?2",
   "describe": {
     "columns": [
       {
@@ -45,7 +45,7 @@
       }
     ],
     "parameters": {
-      "Right": 7
+      "Right": 8
     },
     "nullable": [
       false,
@@ -58,5 +58,5 @@
       true
     ]
   },
-  "hash": "afae5feb2561c1478554357b7d6217b60874c43766e8f4f0320931121a9803be"
+  "hash": "b7b453124811e8d79770764a5bd0ae6e2d7393b38d6a02e329de52ed4c918e62"
 }

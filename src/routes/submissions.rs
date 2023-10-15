@@ -222,11 +222,30 @@ async fn handler(
 
 const DEFAULT_PAGE_SIZE: u32 = 30;
 
-#[derive(serde::Deserialize)]
-struct SubmissionsSearch {
-	submitter: Option<String>,
-	problem: Option<String>,
-	problem_id: Option<String>,
+macro_rules! search_query {
+	($($name:ident: $ty:ty,)*) => {
+		#[derive(serde::Deserialize)]
+		struct SubmissionsSearch {
+			$(
+				#[serde(default)]
+				#[serde(deserialize_with = "crate::util::deserialize_non_empty")]
+				$name: Option<$ty>,
+			)*
+		}
+
+		impl SubmissionsSearch {
+			pub fn any_set(&self) -> bool {
+				$(self.$name.is_some())||*
+			}
+		}
+	};
+}
+
+search_query! {
+	submitter: String,
+	submitter_id: UserId,
+	problem: String,
+	problem_id: ProblemId,
 }
 
 async fn submissions(
@@ -235,21 +254,18 @@ async fn submissions(
 	pagination: RawPagination,
 	extract::Query(search): extract::Query<SubmissionsSearch>,
 ) -> Result<Response, Response> {
-	let search_submitter = search.submitter.filter(|s| !s.is_empty());
-	let search_problem = search.problem.filter(|s| !s.is_empty());
-	let search_problem_id = search.problem_id.and_then(|s| s.parse::<ProblemId>().ok());
-	let any_search =
-		search_submitter.is_some() || search_problem.is_some() || search_problem_id.is_some();
+	let any_search = search.any_set();
 
 	let pagination = pagination.with_default_page_size(DEFAULT_PAGE_SIZE);
 	let limit = pagination.limit();
 	let offset = pagination.offset();
 
 	let num_submissions = query_scalar!(
-		r#"select count(*) as "count: i64" from submissions inner join problems as problem on submissions.for_problem is problem.id inner join users as submitter on submissions.submitter is submitter.id where (?1 is null or instr(submitter.display_name, ?1) > 0) and (?2 is null or instr(problem.name, ?2) > 0) and (?3 is null or submissions.for_problem is ?3) and (?4 >= 20 or ?5 is submissions.submitter or (?4 >= 10 and ?5 is problem.created_by))"#,
-		search_submitter,
-		search_problem,
-		search_problem_id,
+		r#"select count(*) as "count: i64" from submissions inner join problems as problem on submissions.for_problem is problem.id inner join users as submitter on submissions.submitter is submitter.id where (?1 is null or instr(submitter.display_name, ?1) > 0) and (?2 is null or submissions.submitter is ?2) and (?3 is null or instr(problem.name, ?3) > 0) and (?4 is null or submissions.for_problem is ?4) and (?5 >= 20 or ?6 is submissions.submitter or (?5 >= 10 and ?6 is problem.created_by))"#,
+		search.submitter,
+		search.submitter_id,
+		search.problem,
+		search.problem_id,
 		user.permission_level,
 		user.id,
 	)
@@ -258,12 +274,13 @@ async fn submissions(
 	.map_err(error::internal(Some(&user)))?;
 
 	let submissions = query!(
-		r#"select submissions.id as submission_id, problem.id as problem_id, problem.name as problem_name, submitter.id as submitter_id, submitter.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", result as "result: SimpleTestResponse" from submissions inner join problems as problem on submissions.for_problem = problem.id inner join users as submitter on submissions.submitter = submitter.id where (?3 is null or instr(submitter.display_name, ?3) > 0) and (?4 is null or instr(problem.name, ?4) > 0) and (?5 is null or submissions.for_problem is ?5) and (?6 >= 20 or ?7 is submissions.submitter or (?6 >= 10 and ?7 is problem.created_by)) order by submissions.id desc limit ?1 offset ?2"#,
+		r#"select submissions.id as submission_id, problem.id as problem_id, problem.name as problem_name, submitter.id as submitter_id, submitter.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", result as "result: SimpleTestResponse" from submissions inner join problems as problem on submissions.for_problem = problem.id inner join users as submitter on submissions.submitter = submitter.id where (?3 is null or instr(submitter.display_name, ?3) > 0) and (?4 is null or submissions.submitter is ?4) and (?5 is null or instr(problem.name, ?5) > 0) and (?6 is null or submissions.for_problem is ?6) and (?7 >= 20 or ?8 is submissions.submitter or (?7 >= 10 and ?8 is problem.created_by)) order by submissions.id desc limit ?1 offset ?2"#,
 		limit,
 		offset,
-		search_submitter,
-		search_problem,
-		search_problem_id,
+		search.submitter,
+		search.submitter_id,
+		search.problem,
+		search.problem_id,
 		user.permission_level,
 		user.id,
 	).fetch_all(&state.database).await.map_err(error::internal(Some(&user)))?;
@@ -272,9 +289,10 @@ async fn submissions(
 		details open[any_search] {
 			summary { "Search" }
 			form method="get" {
-				label { "Submitter name (display name)" input type="text" name="submitter" value=[search_submitter.as_deref()]; }
-				label { "Problem name" input type="text" name="problem" value=[search_problem.as_deref()]; }
-				label { "Problem ID" input type="number" name="problem_id" value=[search_problem_id]; }
+				label { "Submitter name (display name)" input type="text" name="submitter" value=[search.submitter.as_deref()]; }
+				label { "Submitter ID" input type="number" name="submitter_id" value=[search.submitter_id]; }
+				label { "Problem name" input type="text" name="problem" value=[search.problem.as_deref()]; }
+				label { "Problem ID" input type="number" name="problem_id" value=[search.problem_id]; }
 				div.row {
 					input type="submit" value="Search";
 					a href="/submissions" { "Stop searching" }

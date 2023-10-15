@@ -49,7 +49,9 @@ async fn main_page(
 		h1 { (req_user.display_name) " (" (req_user.username) ")" }
 		p { "Permission level: " (req_user.permission_level.name()) }
 		p { "Created at " (req_user.creation_time) "." }
-		p { "Has made " (req_user.total_submissions) " submission" (s(req_user.total_submissions)) "." }
+		// TODO it could be nice to only make this a link if the requesting user can view the requested user's submissions, but that is pretty complicated and requires additional queries.
+		// Also, it would not be completely accurate unless we also scanned all of the requested user's submissions (we have an index on submission submitter) looking for submissions to problems that the requesting user is the author of.
+		p { a href={"/submissions?submitter_id=" (req_user_id)} { "Has made " (req_user.total_submissions) " submission" (s(req_user.total_submissions)) "." } }
 		p { "Has solved " (req_user.solved_problems) " problem" (s(req_user.solved_problems)) "." }
 		@if permission_level >= UserEditPermissionLevel::Edit {
 			hr;

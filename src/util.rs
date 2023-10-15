@@ -209,3 +209,19 @@ pub fn render_debug(value: impl Debug) -> impl maud::Render {
 
 	Helper(value)
 }
+
+pub fn deserialize_non_empty<'de, T: std::str::FromStr, D: serde::Deserializer<'de>>(
+	de: D,
+) -> Result<Option<T>, D::Error>
+where
+	<T as std::str::FromStr>::Err: std::fmt::Display,
+{
+	let raw = <String as serde::Deserialize<'de>>::deserialize(de)?;
+	if raw.is_empty() {
+		Ok(None)
+	} else {
+		// TODO This is not optimal because it will copy data for some `T` such as `String`.
+		// Using `T: Deserialize<'de>` and `T::deserialize(StringDeserializer::new(raw))` doesn't work because it won't lie to types that expect things like integers, unlike the query param deserializer. Reimplementing that lying logic would be far too complicated.
+		raw.parse().map_err(serde::de::Error::custom).map(Some)
+	}
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "select count(*) as \"count: i64\" from submissions inner join problems as problem on submissions.for_problem is problem.id inner join users as submitter on submissions.submitter is submitter.id where (?1 is null or instr(submitter.display_name, ?1) > 0) and (?2 is null or submissions.submitter is ?2) and (?3 is null or instr(problem.name, ?3) > 0) and (?4 is null or submissions.for_problem is ?4) and (?5 >= 20 or ?6 is submissions.submitter or (?5 >= 10 and ?6 is problem.created_by))",
+  "describe": {
+    "columns": [
+      {
+        "name": "count: i64",
+        "ordinal": 0,
+        "type_info": "Int"
+      }
+    ],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0f3f67af1d22105af7ae91358ff07286cdd4828db5ec179803f117b4ceec1f70"
+}
