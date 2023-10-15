@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "select code, for_problem as problem_id, problems.name as problem_name, problems.created_by as problem_author, submitter, users.display_name as submitter_name, language as \"language: Language\", submission_time as \"submission_time: Timestamp\", judged_time as \"judged_time: Timestamp\", result as \"result: TestResponse\" from submissions inner join problems on submissions.for_problem = problems.id inner join users on submissions.submitter = users.id where submissions.id = ?",
+  "query": "select code, for_problem as problem_id, problem.name as problem_name, problem.created_by as problem_author, submitter, submitter.display_name as submitter_name, language as \"language: Language\", submission_time as \"submission_time: Timestamp\", judged_time as \"judged_time: Timestamp\", result as \"result: TestResponse\" from submissions inner join problems as problem on submissions.for_problem = problem.id inner join users as submitter on submissions.submitter = submitter.id where submissions.id = ?",
   "describe": {
     "columns": [
       {
@@ -70,5 +70,5 @@
       true
     ]
   },
-  "hash": "ad8e7f59f2501ea9bc2418ec237549433e120ee4e7be8fcc3add945bc4bc767a"
+  "hash": "c5a3550ae9576e62017f03245f31c47417ba9a11590d04a1bf4b202d8d57e8cc"
 }

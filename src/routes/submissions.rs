@@ -7,7 +7,7 @@ use maud::html;
 use sqlx::{query, query_scalar};
 
 use crate::error::ErrorResponse;
-use crate::extract::auth::{Admin, User};
+use crate::extract::auth::User;
 use crate::extract::pagination::RawPagination;
 use crate::model::{
 	Language, PermissionLevel, ProblemId, SimpleTestResponse, SubmissionId, UserId,
@@ -159,7 +159,7 @@ async fn handler(
 	user: Option<User>,
 	extract::Path(submission_id): extract::Path<SubmissionId>,
 ) -> Result<Response, Response> {
-	let Some(submission) = query!(r#"select code, for_problem as problem_id, problems.name as problem_name, problems.created_by as problem_author, submitter, users.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", judged_time as "judged_time: Timestamp", result as "result: TestResponse" from submissions inner join problems on submissions.for_problem = problems.id inner join users on submissions.submitter = users.id where submissions.id = ?"#, submission_id).fetch_optional(&state.database).await.map_err(error::internal(user.as_ref()))? else {
+	let Some(submission) = query!(r#"select code, for_problem as problem_id, problem.name as problem_name, problem.created_by as problem_author, submitter, submitter.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", judged_time as "judged_time: Timestamp", result as "result: TestResponse" from submissions inner join problems as problem on submissions.for_problem = problem.id inner join users as submitter on submissions.submitter = submitter.id where submissions.id = ?"#, submission_id).fetch_optional(&state.database).await.map_err(error::internal(user.as_ref()))? else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
 
@@ -231,7 +231,7 @@ struct SubmissionsSearch {
 
 async fn submissions(
 	extract::State(state): extract::State<Arc<State>>,
-	Admin(user): Admin,
+	user: User,
 	pagination: RawPagination,
 	extract::Query(search): extract::Query<SubmissionsSearch>,
 ) -> Result<Response, Response> {
@@ -245,16 +245,28 @@ async fn submissions(
 	let limit = pagination.limit();
 	let offset = pagination.offset();
 
-	let num_submissions = if any_search {
-		query_scalar!(r#"select count(*) as "count: i64" from submissions where (?1 is null or submissions.submitter in (select id from users where instr(display_name, ?1) > 0)) and (?2 is null or submissions.for_problem in (select id from problems where instr(name, ?2) > 0)) and (?3 is null or submissions.for_problem = ?3)"#, search_submitter, search_problem, search_problem_id)
-	} else {
-		query_scalar!(r#"select count(*) as "count: i64" from submissions"#)
-	}
-		.fetch_one(&state.database)
-		.await
-		.map_err(error::internal(Some(&user)))?;
+	let num_submissions = query_scalar!(
+		r#"select count(*) as "count: i64" from submissions inner join problems as problem on submissions.for_problem is problem.id inner join users as submitter on submissions.submitter is submitter.id where (?1 is null or instr(submitter.display_name, ?1) > 0) and (?2 is null or instr(problem.name, ?2) > 0) and (?3 is null or submissions.for_problem is ?3) and (?4 >= 20 or ?5 is submissions.submitter or (?4 >= 10 and ?5 is problem.created_by))"#,
+		search_submitter,
+		search_problem,
+		search_problem_id,
+		user.permission_level,
+		user.id,
+	)
+	.fetch_one(&state.database)
+	.await
+	.map_err(error::internal(Some(&user)))?;
 
-	let submissions = query!(r#"select submissions.id as submission_id, problems.id as problem_id, problems.name as problem_name, users.id as submitter_id, users.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", result as "result: SimpleTestResponse" from submissions inner join problems on submissions.for_problem = problems.id inner join users on submissions.submitter = users.id where (?1 is null or submissions.submitter in (select id from users where instr(display_name, ?1) > 0)) and (?2 is null or submissions.for_problem in (select id from problems where instr(name, ?2) > 0)) and (?3 is null or submissions.for_problem = ?3) order by submissions.id desc limit ?4 offset ?5"#, search_submitter, search_problem, search_problem_id, limit, offset).fetch_all(&state.database).await.map_err(error::internal(Some(&user)))?;
+	let submissions = query!(
+		r#"select submissions.id as submission_id, problem.id as problem_id, problem.name as problem_name, submitter.id as submitter_id, submitter.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", result as "result: SimpleTestResponse" from submissions inner join problems as problem on submissions.for_problem = problem.id inner join users as submitter on submissions.submitter = submitter.id where (?3 is null or instr(submitter.display_name, ?3) > 0) and (?4 is null or instr(problem.name, ?4) > 0) and (?5 is null or submissions.for_problem is ?5) and (?6 >= 20 or ?7 is submissions.submitter or (?6 >= 10 and ?7 is problem.created_by)) order by submissions.id desc limit ?1 offset ?2"#,
+		limit,
+		offset,
+		search_submitter,
+		search_problem,
+		search_problem_id,
+		user.permission_level,
+		user.id,
+	).fetch_all(&state.database).await.map_err(error::internal(Some(&user)))?;
 
 	let body = html! {
 		details open[any_search] {

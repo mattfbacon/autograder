@@ -51,6 +51,9 @@ fn navbar(user: Option<&User>) -> Markup {
 			b.if-narrow { "AG" }
 		}
 		a href="/problems" { "Problems" }
+		@if user.is_some() {
+			a href="/submissions" { "Submissions" }
+		}
 		a href="/about" { "About" }
 		@if user.is_some_and(|user| user.permission_level >= PermissionLevel::Admin) {
 			a href="/admin" { "Admin" }
