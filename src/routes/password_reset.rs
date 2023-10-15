@@ -87,7 +87,7 @@ async fn do_reset(
 	if let Some(post) = post {
 		let password = crate::password::hash(&post.password);
 		query!(
-			"update users set password = ? where id = ?",
+			"update users set password = ?, password_reset_expiration = null where id = ?",
 			password,
 			query.user,
 		)
