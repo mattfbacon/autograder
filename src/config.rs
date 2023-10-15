@@ -15,12 +15,18 @@ pub struct Smtp {
 	pub port: u16,
 	pub username: String,
 	pub password: String,
-	#[serde(default = "false_")]
-	pub implicit_tls: bool,
+	pub implicit_tls: Option<bool>,
 }
 
-const fn false_() -> bool {
-	false
+impl Smtp {
+	pub fn implicit_tls(&self) -> bool {
+		self.implicit_tls.unwrap_or_else(|| match self.port {
+			465 => true,
+			25 | 587 => false,
+			// Default
+			_ => false,
+		})
+	}
 }
 
 const CONFIG_PATH: &str = "config.toml";

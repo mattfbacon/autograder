@@ -174,7 +174,7 @@ If this was not you, you can ignore this email. If your email should not be asso
 
 		SmtpClientBuilder::new(smtp.host.as_str(), smtp.port)
 			.helo_host("dummy.faircode.eu")
-			.implicit_tls(smtp.implicit_tls)
+			.implicit_tls(smtp.implicit_tls())
 			.credentials((smtp.username.as_str(), smtp.password.as_str()))
 			.connect()
 			.await?
