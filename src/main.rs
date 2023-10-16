@@ -23,6 +23,7 @@ use std::sync::Arc;
 use bindable::BindableAddr;
 use hyperlocal::UnixServerExt;
 use once_cell::sync::Lazy;
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqliteSynchronous};
 use sqlx::{query, SqlitePool};
 
 use crate::config::Config;
@@ -67,7 +68,12 @@ async fn main() {
 
 	Lazy::force(&CONFIG);
 
-	let database = SqlitePool::connect("sqlite://db.sqlite?mode=rwc")
+	let db_options = SqliteConnectOptions::new()
+		.filename("db.sqlite")
+		.journal_mode(SqliteJournalMode::Wal)
+		.synchronous(SqliteSynchronous::Normal)
+		.create_if_missing(true);
+	let database = SqlitePool::connect_with(db_options)
 		.await
 		.expect("opening database");
 
