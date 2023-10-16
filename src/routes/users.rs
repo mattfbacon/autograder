@@ -39,7 +39,7 @@ async fn main_page(
 	req_user_id: UserId,
 	action_message: Option<&str>,
 ) -> Result<Response, Response> {
-	let Some(req_user) = query!(r#"select username, display_name, email, creation_time as "creation_time!: Timestamp", permission_level as "permission_level: PermissionLevel", (select count(*) from submissions where submitter = users.id) as "total_submissions!: i64", (select count(distinct for_problem) from submissions where submitter = users.id and result like 'o%') as "solved_problems!: i64" from users where id = ?"#, req_user_id).fetch_optional(&state.database).await.map_err(error::sqlx(login_user))? else {
+	let Some(req_user) = query!(r#"select username, display_name, email, creation_time as "creation_time!: Timestamp", permission_level as "permission_level: PermissionLevel", (select count(*) from submissions where submitter = users.id) as "total_submissions!: i64", (select count(distinct for_problem) from submissions where submitter = users.id and result like 'o%') as "solved_problems!: i64", (select count(*) from problems where created_by = users.id) as "created_problems!: i64" from users where id = ?"#, req_user_id).fetch_optional(&state.database).await.map_err(error::sqlx(login_user))? else {
 		return Err(error::not_found(login_user).await);
 	};
 
@@ -52,7 +52,8 @@ async fn main_page(
 		// TODO it could be nice to only make this a link if the requesting user can view the requested user's submissions, but that is pretty complicated and requires additional queries.
 		// Also, it would not be completely accurate unless we also scanned all of the requested user's submissions (we have an index on submission submitter) looking for submissions to problems that the requesting user is the author of.
 		p { a href={"/submissions?submitter_id=" (req_user_id)} { "Has made " (req_user.total_submissions) " submission" (s(req_user.total_submissions)) "." } }
-		p { "Has solved " (req_user.solved_problems) " problem" (s(req_user.solved_problems)) "." }
+		p { a href={"/problems?solved_by_id=" (req_user_id)} { "Has solved " (req_user.solved_problems) " problem" (s(req_user.solved_problems)) "." } }
+		p { a href={"/problems?created_by_id=" (req_user_id)} { "Has created " (req_user.created_problems) " problem" (s(req_user.created_problems)) "." } }
 		@if permission_level >= UserEditPermissionLevel::Edit {
 			hr;
 			h2 { "Change display name" }
