@@ -1,0 +1,18 @@
+## You can use `tcp://<address>` or `unix://<path>` here.
+# address = "tcp://127.0.0.1:3000"
+
+## You must provide the external URL which this service is accessible from.
+## It will be used in password reset emails.
+# external_url = "autograder.example.com"
+
+## This is shown in the footer on all pages.
+# admin_email = "you@example.com"
+
+## Mail parameters.
+# [smtp]
+# host = "mail.example.com"
+# port = 465
+# username = "autograder@example.com"
+# password = "hunter2"
+## This will be inferred from `port` if you don't specify it manually.
+# implicit_tls = true
