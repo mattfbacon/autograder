@@ -1675,7 +1675,7 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.7.2"
-source = "git+https://github.com/mattfbacon/sqlx#94049b3a5ae0f0daf88336634ea402acc02097e1"
+source = "git+https://github.com/mattfbacon/sqlx?rev=5fa54864#5fa54864c35a60115ff9a1da791bc694177c453a"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -1687,7 +1687,7 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.7.2"
-source = "git+https://github.com/mattfbacon/sqlx#94049b3a5ae0f0daf88336634ea402acc02097e1"
+source = "git+https://github.com/mattfbacon/sqlx?rev=5fa54864#5fa54864c35a60115ff9a1da791bc694177c453a"
 dependencies = [
  "ahash",
  "atoi",
@@ -1726,7 +1726,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.7.2"
-source = "git+https://github.com/mattfbacon/sqlx#94049b3a5ae0f0daf88336634ea402acc02097e1"
+source = "git+https://github.com/mattfbacon/sqlx?rev=5fa54864#5fa54864c35a60115ff9a1da791bc694177c453a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1738,7 +1738,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros-core"
 version = "0.7.2"
-source = "git+https://github.com/mattfbacon/sqlx#94049b3a5ae0f0daf88336634ea402acc02097e1"
+source = "git+https://github.com/mattfbacon/sqlx?rev=5fa54864#5fa54864c35a60115ff9a1da791bc694177c453a"
 dependencies = [
  "atomic-write-file",
  "dotenvy",
@@ -1762,7 +1762,7 @@ dependencies = [
 [[package]]
 name = "sqlx-mysql"
 version = "0.7.2"
-source = "git+https://github.com/mattfbacon/sqlx#94049b3a5ae0f0daf88336634ea402acc02097e1"
+source = "git+https://github.com/mattfbacon/sqlx?rev=5fa54864#5fa54864c35a60115ff9a1da791bc694177c453a"
 dependencies = [
  "atoi",
  "base64",
@@ -1802,7 +1802,7 @@ dependencies = [
 [[package]]
 name = "sqlx-postgres"
 version = "0.7.2"
-source = "git+https://github.com/mattfbacon/sqlx#94049b3a5ae0f0daf88336634ea402acc02097e1"
+source = "git+https://github.com/mattfbacon/sqlx?rev=5fa54864#5fa54864c35a60115ff9a1da791bc694177c453a"
 dependencies = [
  "atoi",
  "base64",
@@ -1840,7 +1840,7 @@ dependencies = [
 [[package]]
 name = "sqlx-sqlite"
 version = "0.7.2"
-source = "git+https://github.com/mattfbacon/sqlx#94049b3a5ae0f0daf88336634ea402acc02097e1"
+source = "git+https://github.com/mattfbacon/sqlx?rev=5fa54864#5fa54864c35a60115ff9a1da791bc694177c453a"
 dependencies = [
  "atoi",
  "flume",
