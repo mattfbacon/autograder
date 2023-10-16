@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "update problems set name = ?, description = ?, time_limit = ?, visible = ?, tests = ?, custom_judger = ? where id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "c0ef9b9ad34e3298c942ed2a5a64306823a9e2d0979e5985e8c2e4b1945f9d47"
+}

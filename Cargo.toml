@@ -31,6 +31,7 @@ serde_bytes = "0.11"
 sqlx = { version = "0.7", git = "https://github.com/mattfbacon/sqlx", rev = "5fa54864", default_features = false, features = [
 	"macros",
 	"migrate",
+	"regexp",
 	"runtime-tokio",
 	"sqlite",
 ] }

@@ -13,6 +13,19 @@ use tower_service::Service;
 use crate::extract::auth::User;
 use crate::template::page;
 
+fn constraint_message(name: &str) -> Option<&'static str> {
+	Some(match name {
+		"problems_name_not_empty" => "Problem name cannot be empty.",
+		"problems_name" => "Problem name can only contain printable characters.",
+		"problems_description" => "Problem description can only contain printable characters.",
+		"users_username_unique" => "That username is already taken.",
+		"users_username" => "Username can only contain lowercase letters, numbers, and underscores.",
+		"users_display_name_not_empty" => "Display name cannot be empty.",
+		"users_display_name" => "Display name can only contain printable characters.",
+		_ => return None,
+	})
+}
+
 pub struct ErrorResponse {
 	pub status: StatusCode,
 	pub message: String,
@@ -28,6 +41,19 @@ impl ErrorResponse {
 				"The error has been logged under ID {id}. Contact the administrator with this ID."
 			),
 		}
+	}
+
+	pub fn sqlx(error: sqlx::Error) -> Self {
+		if let sqlx::Error::Database(db_error) = &error {
+			let message = db_error.message();
+			if let Some((_, constraint_name)) = message.split_once("constraint failed: ") {
+				if let Some(message) = constraint_message(constraint_name) {
+					return Self::bad_request(message);
+				}
+			}
+		}
+
+		Self::internal(error)
 	}
 
 	pub fn bad_request<T: Into<String>>(reason: T) -> Self {
@@ -71,8 +97,8 @@ impl ErrorResponse {
 	}
 }
 
-pub fn internal<T: std::fmt::Debug>(user: Option<&User>) -> impl '_ + FnOnce(T) -> Response {
-	move |error| ErrorResponse::internal(error).into_response(user)
+pub fn sqlx(user: Option<&User>) -> impl '_ + FnOnce(sqlx::Error) -> Response {
+	move |error| ErrorResponse::sqlx(error).into_response(user)
 }
 
 pub async fn not_found(user: Option<&User>) -> Response {

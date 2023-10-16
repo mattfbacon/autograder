@@ -46,7 +46,7 @@ async fn handler(
 	}
 	.fetch_one(&state.database)
 	.await
-	.map_err(error::internal(user.as_ref()))?;
+	.map_err(error::sqlx(user.as_ref()))?;
 
 	let user_id = user.as_ref().map(|user| user.id);
 	let problems = query!(
@@ -55,7 +55,7 @@ async fn handler(
 		show_invisible,
 		limit,
 		offset,
-	).fetch_all(&state.database).await.map_err(error::internal(user.as_ref()))?;
+	).fetch_all(&state.database).await.map_err(error::sqlx(user.as_ref()))?;
 
 	let body = html! {
 		@if user.as_ref().is_some_and(|user| user.permission_level >= PermissionLevel::ProblemAuthor) {

@@ -16,7 +16,7 @@ async fn handler(
 		query!("delete from sessions where user = ?", user.id)
 			.execute(&state.database)
 			.await
-			.map_err(error::internal(Some(&user)))?;
+			.map_err(error::sqlx(Some(&user)))?;
 	}
 
 	Ok((Token::removal(), Redirect::to("/log-in")))

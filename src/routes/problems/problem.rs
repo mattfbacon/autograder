@@ -46,7 +46,7 @@ async fn handle_edit_post(
 			})?;
 	}
 
-	query!("update problems set name = ?, description = ?, time_limit = ?, visible = ?, tests = ?, custom_judger = ? where id = ?", post.name, post.description, post.time_limit, post.visible, post.tests, post.custom_judger, problem_id).execute(&state.database).await.map_err(ErrorResponse::internal)?;
+	query!("update problems set name = ?, description = ?, time_limit = ?, visible = ?, tests = ?, custom_judger = ? where id = ?", post.name, post.description, post.time_limit, post.visible, post.tests, post.custom_judger, problem_id).execute(&state.database).await.map_err(ErrorResponse::sqlx)?;
 
 	Ok(())
 }
@@ -60,7 +60,7 @@ async fn edit_handler(
 	let Some(created_by) = query_scalar!("select created_by from problems where id = ?", problem_id)
 		.fetch_optional(&state.database)
 		.await
-		.map_err(error::internal(user.as_ref()))?
+		.map_err(error::sqlx(user.as_ref()))?
 	else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
@@ -81,7 +81,7 @@ async fn edit_handler(
 	)
 	.fetch_optional(&state.database)
 	.await
-	.map_err(error::internal(user.as_ref()))?
+	.map_err(error::sqlx(user.as_ref()))?
 	else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
@@ -116,7 +116,7 @@ async fn delete_handler(
 	let Some(created_by) = query_scalar!("select created_by from problems where id = ?", problem_id)
 		.fetch_optional(&state.database)
 		.await
-		.map_err(error::internal(user.as_ref()))?
+		.map_err(error::sqlx(user.as_ref()))?
 	else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
@@ -127,7 +127,7 @@ async fn delete_handler(
 	query!("delete from problems where id = ?", problem_id)
 		.execute(&state.database)
 		.await
-		.map_err(error::internal(user.as_ref()))?;
+		.map_err(error::sqlx(user.as_ref()))?;
 
 	Ok(Redirect::to("/problems").into_response())
 }
@@ -143,7 +143,7 @@ async fn download_cases(
 	)
 	.fetch_optional(&state.database)
 	.await
-	.map_err(error::internal(user.as_ref()))?
+	.map_err(error::sqlx(user.as_ref()))?
 	else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
@@ -201,7 +201,7 @@ async fn handle_post(
 	};
 
 	let now = now();
-	let submission_id = query_scalar!("insert into submissions (code, for_problem, submitter, language, submission_time, result) values (?, ?, ?, ?, ?, null) returning id", post.code, problem_id, user.id, post.language, now).fetch_one(&state.database).await.map_err(ErrorResponse::internal)?;
+	let submission_id = query_scalar!("insert into submissions (code, for_problem, submitter, language, submission_time, result) values (?, ?, ?, ?, ?, null) returning id", post.code, problem_id, user.id, post.language, now).fetch_one(&state.database).await.map_err(ErrorResponse::sqlx)?;
 
 	Ok(submission_id)
 }
@@ -234,7 +234,7 @@ async fn handler(
 	)
 	.fetch_optional(&state.database)
 	.await
-	.map_err(error::internal(user.as_ref()))?
+	.map_err(error::sqlx(user.as_ref()))?
 	else {
 		return Err(error::not_found(user.as_ref()).await);
 	};

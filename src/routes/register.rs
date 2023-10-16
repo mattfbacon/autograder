@@ -31,7 +31,7 @@ async fn handle_post(state: &State, mut request: Form) -> Result<(), ErrorRespon
 	let user = query!("select id from users where username = ?", request.username)
 		.fetch_optional(&state.database)
 		.await
-		.map_err(ErrorResponse::internal)?;
+		.map_err(ErrorResponse::sqlx)?;
 
 	if user.is_some() {
 		return Err(ErrorResponse::bad_request("The username is already taken."));
@@ -42,7 +42,7 @@ async fn handle_post(state: &State, mut request: Form) -> Result<(), ErrorRespon
 	let password_hash = crate::password::hash(&request.password);
 	let creation_time = now();
 	let permission_level = PermissionLevel::default();
-	let res = query!(
+	query!(
 		"insert into users (username, display_name, email, password, creation_time, permission_level) values (?, ?, ?, ?, ?, ?)",
 		request.username,
 		request.display_name,
@@ -52,18 +52,8 @@ async fn handle_post(state: &State, mut request: Form) -> Result<(), ErrorRespon
 		permission_level,
 	)
 	.execute(&state.database)
-	.await;
-
-	match res {
-		Err(sqlx::Error::Database(error))
-			if error.kind() == sqlx::error::ErrorKind::UniqueViolation =>
-		{
-			return Err(ErrorResponse::bad_request("The username is already taken."));
-		}
-		res => {
-			res.map_err(ErrorResponse::internal)?;
-		}
-	}
+	.await
+	.map_err(ErrorResponse::sqlx)?;
 
 	Ok(())
 }

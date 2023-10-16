@@ -28,7 +28,7 @@ pub async fn do_judge(
 	)
 	.fetch_optional(&state.database)
 	.await
-	.map_err(ErrorResponse::internal)?
+	.map_err(ErrorResponse::sqlx)?
 	else {
 		return Err(ErrorResponse::not_found().await);
 	};
@@ -55,7 +55,7 @@ pub async fn do_judge(
 	)
 	.execute(&state.database)
 	.await
-	.map_err(ErrorResponse::internal)?;
+	.map_err(ErrorResponse::sqlx)?;
 
 	Ok(Redirect::to(&format!("/submission/{submission_id}")).into_response())
 }
@@ -110,7 +110,7 @@ async fn rejudge(
 	user: Option<User>,
 	extract::Path(submission_id): extract::Path<SubmissionId>,
 ) -> Result<Response, Response> {
-	let Some(submission) = query!("select submitter, problems.created_by as problem_author from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?", submission_id).fetch_optional(&state.database).await.map_err(error::internal(user.as_ref()))? else {
+	let Some(submission) = query!("select submitter, problems.created_by as problem_author from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?", submission_id).fetch_optional(&state.database).await.map_err(error::sqlx(user.as_ref()))? else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
 
@@ -134,7 +134,7 @@ async fn delete(
 	user: Option<User>,
 	extract::Path(submission_id): extract::Path<SubmissionId>,
 ) -> Result<Response, Response> {
-	let Some(submission) = query!("select submitter, for_problem, problems.created_by as problem_author from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?", submission_id).fetch_optional(&state.database).await.map_err(error::internal(user.as_ref()))? else {
+	let Some(submission) = query!("select submitter, for_problem, problems.created_by as problem_author from submissions inner join problems on submissions.for_problem = problems.id where submissions.id = ?", submission_id).fetch_optional(&state.database).await.map_err(error::sqlx(user.as_ref()))? else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
 
@@ -151,7 +151,7 @@ async fn delete(
 	query!("delete from submissions where id = ?", submission_id)
 		.execute(&state.database)
 		.await
-		.map_err(error::internal(user.as_ref()))?;
+		.map_err(error::sqlx(user.as_ref()))?;
 	Ok(Redirect::to(&format!("/problem/{}", submission.for_problem)).into_response())
 }
 
@@ -160,7 +160,7 @@ async fn handler(
 	user: Option<User>,
 	extract::Path(submission_id): extract::Path<SubmissionId>,
 ) -> Result<Response, Response> {
-	let Some(submission) = query!(r#"select code, for_problem as problem_id, problem.name as problem_name, problem.created_by as problem_author, submitter, submitter.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", judged_time as "judged_time: Timestamp", result as "result: TestResponse" from submissions inner join problems as problem on submissions.for_problem = problem.id inner join users as submitter on submissions.submitter = submitter.id where submissions.id = ?"#, submission_id).fetch_optional(&state.database).await.map_err(error::internal(user.as_ref()))? else {
+	let Some(submission) = query!(r#"select code, for_problem as problem_id, problem.name as problem_name, problem.created_by as problem_author, submitter, submitter.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", judged_time as "judged_time: Timestamp", result as "result: TestResponse" from submissions inner join problems as problem on submissions.for_problem = problem.id inner join users as submitter on submissions.submitter = submitter.id where submissions.id = ?"#, submission_id).fetch_optional(&state.database).await.map_err(error::sqlx(user.as_ref()))? else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
 
@@ -287,7 +287,7 @@ async fn submissions(
 	)
 	.fetch_one(&state.database)
 	.await
-	.map_err(error::internal(Some(&user)))?;
+	.map_err(error::sqlx(Some(&user)))?;
 
 	let submissions = query!(
 		r#"select submissions.id as submission_id, problem.id as problem_id, problem.name as problem_name, submitter.id as submitter_id, submitter.display_name as submitter_name, language as "language: Language", submission_time as "submission_time: Timestamp", result as "result: SimpleTestResponse" from submissions inner join problems as problem on submissions.for_problem = problem.id inner join users as submitter on submissions.submitter = submitter.id where (?3 is null or instr(submitter.display_name, ?3) > 0) and (?4 is null or submissions.submitter is ?4) and (?5 is null or instr(problem.name, ?5) > 0) and (?6 is null or submissions.for_problem is ?6) and (?7 >= 20 or ?8 is submissions.submitter or (?7 >= 10 and ?8 is problem.created_by)) order by submissions.id desc limit ?1 offset ?2"#,
@@ -299,7 +299,7 @@ async fn submissions(
 		search.problem_id,
 		user.permission_level,
 		user.id,
-	).fetch_all(&state.database).await.map_err(error::internal(Some(&user)))?;
+	).fetch_all(&state.database).await.map_err(error::sqlx(Some(&user)))?;
 
 	let body = html! {
 		details open[any_search] {

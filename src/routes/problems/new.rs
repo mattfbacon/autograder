@@ -77,7 +77,7 @@ async fn handle_post(
 	}
 
 	let now = now();
-	let id = query_scalar!("insert into problems (name, description, time_limit, visible, tests, custom_judger, creation_time, created_by) values (?, ?, ?, ?, ?, ?, ?, ?) returning id", post.name, post.description, post.time_limit, post.visible, post.tests, post.custom_judger, now, user.id).fetch_one(&state.database).await.map_err(ErrorResponse::internal)?;
+	let id = query_scalar!("insert into problems (name, description, time_limit, visible, tests, custom_judger, creation_time, created_by) values (?, ?, ?, ?, ?, ?, ?, ?) returning id", post.name, post.description, post.time_limit, post.visible, post.tests, post.custom_judger, now, user.id).fetch_one(&state.database).await.map_err(ErrorResponse::sqlx)?;
 	Ok(id)
 }
 

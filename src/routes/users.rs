@@ -39,7 +39,7 @@ async fn main_page(
 	req_user_id: UserId,
 	action_message: Option<&str>,
 ) -> Result<Response, Response> {
-	let Some(req_user) = query!(r#"select username, display_name, email, creation_time as "creation_time!: Timestamp", permission_level as "permission_level: PermissionLevel", (select count(*) from submissions where submitter = users.id) as "total_submissions!: i64", (select count(distinct for_problem) from submissions where submitter = users.id and result like 'o%') as "solved_problems!: i64" from users where id = ?"#, req_user_id).fetch_optional(&state.database).await.map_err(error::internal(login_user))? else {
+	let Some(req_user) = query!(r#"select username, display_name, email, creation_time as "creation_time!: Timestamp", permission_level as "permission_level: PermissionLevel", (select count(*) from submissions where submitter = users.id) as "total_submissions!: i64", (select count(distinct for_problem) from submissions where submitter = users.id and result like 'o%') as "solved_problems!: i64" from users where id = ?"#, req_user_id).fetch_optional(&state.database).await.map_err(error::sqlx(login_user))? else {
 		return Err(error::not_found(login_user).await);
 	};
 
@@ -111,7 +111,7 @@ async fn delete(
 	query!("delete from users where id = ?", req_user_id,)
 		.execute(&state.database)
 		.await
-		.map_err(error::internal(login_user.as_ref()))?;
+		.map_err(error::sqlx(login_user.as_ref()))?;
 
 	Ok(Redirect::to("/").into_response())
 }
@@ -142,7 +142,7 @@ async fn change_email(
 	)
 	.execute(&state.database)
 	.await
-	.map_err(error::internal(login_user.as_ref()))?;
+	.map_err(error::sqlx(login_user.as_ref()))?;
 
 	main_page(
 		&state,
@@ -176,7 +176,7 @@ async fn change_password(
 	)
 	.execute(&state.database)
 	.await
-	.map_err(error::internal(login_user.as_ref()))?;
+	.map_err(error::sqlx(login_user.as_ref()))?;
 
 	main_page(
 		&state,
@@ -209,7 +209,7 @@ async fn change_permission(
 	)
 	.execute(&state.database)
 	.await
-	.map_err(error::internal(login_user.as_ref()))?;
+	.map_err(error::sqlx(login_user.as_ref()))?;
 
 	main_page(
 		&state,
@@ -242,7 +242,7 @@ async fn rename(
 	)
 	.execute(&state.database)
 	.await
-	.map_err(error::internal(login_user.as_ref()))?;
+	.map_err(error::sqlx(login_user.as_ref()))?;
 
 	main_page(
 		&state,

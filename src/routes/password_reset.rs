@@ -38,7 +38,7 @@ async fn remove_email(
 	)
 	.execute(&state.database)
 	.await
-	.map_err(error::internal(user.as_ref()))?;
+	.map_err(error::sqlx(user.as_ref()))?;
 
 	if result.rows_affected() > 0 {
 		tracing::info!(user=?query.user, "email removed");
@@ -70,7 +70,7 @@ async fn do_reset(
 	)
 	.fetch_optional(&state.database)
 	.await
-	.map_err(error::internal(login_user.as_ref()))?
+	.map_err(error::sqlx(login_user.as_ref()))?
 	else {
 		return Err(error::not_found(login_user.as_ref()).await);
 	};
@@ -93,7 +93,7 @@ async fn do_reset(
 		)
 		.execute(&state.database)
 		.await
-		.map_err(error::internal(login_user.as_ref()))?;
+		.map_err(error::sqlx(login_user.as_ref()))?;
 
 		return Ok(Redirect::to("/log-in").into_response());
 	}
@@ -123,7 +123,7 @@ async fn handle_post(state: &State, post: Form) -> Result<(), ErrorResponse> {
 	)
 	.fetch_optional(&state.database)
 	.await
-	.map_err(ErrorResponse::internal)?;
+	.map_err(ErrorResponse::sqlx)?;
 
 	let Some(user) = user else {
 		return Ok(());
@@ -151,7 +151,7 @@ async fn handle_post(state: &State, post: Form) -> Result<(), ErrorResponse> {
 	)
 	.execute(&state.database)
 	.await
-	.map_err(ErrorResponse::internal)?;
+	.map_err(ErrorResponse::sqlx)?;
 
 	let body = format!("\
 Someone requested to reset the password for the account with the username {username:?} which is associated with this email {user_email:?}. \

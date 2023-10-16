@@ -191,7 +191,7 @@ async fn extract_user(
 		Err(error) => return Ok(Err(error)),
 	};
 
-	let Some(inner) = query!(r#"select user as id, users.display_name as "display_name: Arc<str>", users.permission_level as "permission_level!: PermissionLevel", expiration as "expiration: Timestamp" from sessions inner join users on sessions.user = users.id where token = ?"#, token).fetch_optional(&state.database).await.map_err(ErrorResponse::internal)? else { return Ok(Err(NoUser { should_remove_token: true })); };
+	let Some(inner) = query!(r#"select user as id, users.display_name as "display_name: Arc<str>", users.permission_level as "permission_level!: PermissionLevel", expiration as "expiration: Timestamp" from sessions inner join users on sessions.user = users.id where token = ?"#, token).fetch_optional(&state.database).await.map_err(ErrorResponse::sqlx)? else { return Ok(Err(NoUser { should_remove_token: true })); };
 
 	let now = now();
 
@@ -199,7 +199,7 @@ async fn extract_user(
 		query!("delete from sessions where token = ?", token)
 			.execute(&state.database)
 			.await
-			.map_err(ErrorResponse::internal)?;
+			.map_err(ErrorResponse::sqlx)?;
 		return Ok(Err(NoUser {
 			should_remove_token: true,
 		}));
@@ -215,7 +215,7 @@ async fn extract_user(
 		)
 		.execute(&state.database)
 		.await
-		.map_err(ErrorResponse::internal)?;
+		.map_err(ErrorResponse::sqlx)?;
 	}
 
 	Ok(Ok(User {
@@ -295,7 +295,7 @@ pub async fn log_in(state: &State, user_id: UserId) -> Result<Token, ErrorRespon
 			{
 				continue;
 			}
-			Err(error) => return Err(ErrorResponse::internal(error)),
+			Err(error) => return Err(ErrorResponse::sqlx(error)),
 			Ok(_) => break token,
 		}
 	};

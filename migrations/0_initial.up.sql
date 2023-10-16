@@ -1,7 +1,9 @@
+-- Make sure that any named constraints you add here are also added to `crate::error::constraint_message`.
+
 create table problems (
 	id integer primary key,
-	name text not null,
-	description text not null,
+	name text not null constraint problems_name_not_empty check (name != '') constraint problems_name check (name not regexp '[\x01-\x1f\x80-\x9f]'),
+	description text not null constraint problems_description check (description not regexp '[\x01-\x1f\x80-\x9f]'),
 	time_limit integer not null,
 	visible integer not null,
 	tests text not null,
@@ -26,8 +28,8 @@ create index submissions_submitter on submissions(submitter);
 
 create table users (
 	id integer primary key,
-	username text unique not null,
-	display_name text not null,
+	username text not null constraint users_username_unique unique constraint users_username check (username regexp '^[a-z0-9_]+$'),
+	display_name text not null constraint users_display_name_not_empty check (display_name != '') constraint users_display_name check (display_name not regexp '[\x01-\x1f\x80-\x9f]'),
 	email text,
 	password text not null,
 	creation_time integer not null,

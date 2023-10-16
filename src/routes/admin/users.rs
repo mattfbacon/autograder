@@ -26,13 +26,13 @@ async fn users(
 	let num_users = query_scalar!(r#"select count(*) as "count: i64" from users"#)
 		.fetch_one(&state.database)
 		.await
-		.map_err(error::internal(Some(&user)))?;
+		.map_err(error::sqlx(Some(&user)))?;
 
 	let users =
 		query!(r#"select id, username, display_name, creation_time as "creation_time: Timestamp", permission_level as "permission_level: PermissionLevel" from users order by id desc limit ? offset ?"#, limit, offset)
 			.fetch_all(&state.database)
 			.await
-			.map_err(error::internal(Some(&user)))?;
+			.map_err(error::sqlx(Some(&user)))?;
 
 	let body = html! {
 		table {

@@ -29,7 +29,7 @@ async fn handle_post(state: &State, form: Form) -> Result<Token, ErrorResponse> 
 	)
 	.fetch_optional(&state.database)
 	.await
-	.map_err(ErrorResponse::internal)?;
+	.map_err(ErrorResponse::sqlx)?;
 
 	if let Some(entry) = entry {
 		if entry
