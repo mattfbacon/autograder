@@ -4,7 +4,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use axum::body::Body;
-use axum::extract::FromRequestParts;
+use axum::extract::{FromRequestParts, OriginalUri};
 use axum::http::request::Parts;
 use axum::http::{HeaderMap, Request};
 use axum::middleware::Next;
@@ -152,7 +152,8 @@ impl User {
 		if let Some(user) = parts.extensions.get::<User>() {
 			Ok(user.clone())
 		} else {
-			let return_to = return_to::add_to_path("/log-in", parts.uri.path());
+			let uri = &parts.extensions.get::<OriginalUri>().unwrap().0;
+			let return_to = return_to::add_to_path("/log-in", uri.path());
 			Err(Redirect::to(&return_to).into_response())
 		}
 	}
