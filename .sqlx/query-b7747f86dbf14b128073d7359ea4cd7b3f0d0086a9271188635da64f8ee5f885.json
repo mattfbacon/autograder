@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "select created_by, visible as \"visible: bool\" from problems where id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "created_by",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "visible: bool",
+        "ordinal": 1,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "b7747f86dbf14b128073d7359ea4cd7b3f0d0086a9271188635da64f8ee5f885"
+}

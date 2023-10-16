@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "select tests as \"tests: Tests\", created_by from problems where id = ?",
+  "query": "select tests as \"tests: Tests\", created_by, visible as \"visible: bool\" from problems where id = ?",
   "describe": {
     "columns": [
       {
@@ -12,6 +12,11 @@
         "name": "created_by",
         "ordinal": 1,
         "type_info": "Int64"
+      },
+      {
+        "name": "visible: bool",
+        "ordinal": 2,
+        "type_info": "Int64"
       }
     ],
     "parameters": {
@@ -19,8 +24,9 @@
     },
     "nullable": [
       false,
-      true
+      true,
+      false
     ]
   },
-  "hash": "16f22835f5579880815096374c87c5b143de8be4a68a2ebbd1d5f61784cfa327"
+  "hash": "d18e66d39b6c3df920be059049cc40be9c8270ba4288f0d2d5996ab23859ae20"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "select name, description, problems.creation_time as \"creation_time: Timestamp\", users.id as \"created_by_id?\", users.display_name as \"created_by_name?\", (select count(*) from submissions where for_problem = problems.id) as \"num_submissions!: i64\", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as \"num_correct_submissions!: i64\", (select count(*) > 0 from submissions where for_problem = problems.id and submitter = ?1 and result like 'o%') as \"user_solved!: bool\", tests as \"tests: Tests\" from problems left join users on problems.created_by = users.id where problems.id = ?2",
+  "query": "select name, description, problems.creation_time as \"creation_time: Timestamp\", users.id as \"created_by_id?\", users.display_name as \"created_by_name?\", (select count(*) from submissions where for_problem = problems.id) as \"num_submissions!: i64\", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as \"num_correct_submissions!: i64\", (select count(*) > 0 from submissions where for_problem = problems.id and submitter = ?1 and result like 'o%') as \"user_solved!: bool\", tests as \"tests: Tests\", visible as \"visible: bool\" from problems left join users on problems.created_by = users.id where problems.id = ?2",
   "describe": {
     "columns": [
       {
@@ -47,6 +47,11 @@
         "name": "tests: Tests",
         "ordinal": 8,
         "type_info": "Text"
+      },
+      {
+        "name": "visible: bool",
+        "ordinal": 9,
+        "type_info": "Int64"
       }
     ],
     "parameters": {
@@ -61,8 +66,9 @@
       null,
       null,
       null,
+      false,
       false
     ]
   },
-  "hash": "204031e6b7ddbc18ee4cfe1e145bf1e05d3f41ac0fa1727c563004491bf4d64a"
+  "hash": "51871e027d5857ae5e6e8770bddaf06702625f1046e7c14af33501ef6dcaeabe"
 }

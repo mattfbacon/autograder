@@ -14,19 +14,36 @@ use super::pass_rate;
 use crate::error::ErrorResponse;
 use crate::extract::auth::User;
 use crate::extract::if_post::IfPost;
-use crate::model::{Language, PermissionLevel, ProblemId, SubmissionId, Tests, UserId};
+use crate::model::{Language, PermissionLevel, ProblemId, Tests, UserId};
 use crate::template::{page, BannerKind};
 use crate::time::{now, Timestamp};
 use crate::util::{deserialize_textarea, s};
 use crate::{error, State};
 
-fn can_edit(user: Option<&User>, problem_created_by: Option<UserId>) -> bool {
-	user.is_some_and(|user| {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum ProblemPermissionLevel {
+	None,
+	View,
+	Edit,
+}
+
+fn permission_level(
+	user: Option<&User>,
+	problem_created_by: Option<UserId>,
+	problem_visible: bool,
+) -> ProblemPermissionLevel {
+	if user.is_some_and(|user| {
 		user.permission_level >= PermissionLevel::Admin
 			|| problem_created_by.is_some_and(|problem_created_by| {
 				user.permission_level >= PermissionLevel::ProblemAuthor && user.id == problem_created_by
 			})
-	})
+	}) {
+		ProblemPermissionLevel::Edit
+	} else if problem_visible {
+		ProblemPermissionLevel::View
+	} else {
+		ProblemPermissionLevel::None
+	}
 }
 
 async fn handle_edit_post(
@@ -57,14 +74,19 @@ async fn edit_handler(
 	extract::Path(problem_id): extract::Path<ProblemId>,
 	IfPost(post): IfPost<extract::Form<super::new::Problem>>,
 ) -> Result<Response, Response> {
-	let Some(created_by) = query_scalar!("select created_by from problems where id = ?", problem_id)
-		.fetch_optional(&state.database)
-		.await
-		.map_err(error::sqlx(user.as_ref()))?
+	let Some(problem) = query!(
+		r#"select created_by, visible as "visible: bool" from problems where id = ?"#,
+		problem_id,
+	)
+	.fetch_optional(&state.database)
+	.await
+	.map_err(error::sqlx(user.as_ref()))?
 	else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
-	if !can_edit(user.as_ref(), created_by) {
+	if permission_level(user.as_ref(), problem.created_by, problem.visible)
+		< ProblemPermissionLevel::Edit
+	{
 		return Err(error::fake_not_found(user.as_ref()).await);
 	}
 
@@ -113,14 +135,19 @@ async fn delete_handler(
 	user: Option<User>,
 	extract::Path(problem_id): extract::Path<ProblemId>,
 ) -> Result<Response, Response> {
-	let Some(created_by) = query_scalar!("select created_by from problems where id = ?", problem_id)
-		.fetch_optional(&state.database)
-		.await
-		.map_err(error::sqlx(user.as_ref()))?
+	let Some(problem) = query!(
+		r#"select created_by, visible as "visible: bool" from problems where id = ?"#,
+		problem_id,
+	)
+	.fetch_optional(&state.database)
+	.await
+	.map_err(error::sqlx(user.as_ref()))?
 	else {
 		return Err(error::not_found(user.as_ref()).await);
 	};
-	if !can_edit(user.as_ref(), created_by) {
+	if permission_level(user.as_ref(), problem.created_by, problem.visible)
+		< ProblemPermissionLevel::Edit
+	{
 		return Err(error::fake_not_found(user.as_ref()).await);
 	}
 
@@ -138,7 +165,7 @@ async fn download_cases(
 	extract::Path(problem_id): extract::Path<ProblemId>,
 ) -> Result<Response, Response> {
 	let Some(problem) = query!(
-		r#"select tests as "tests: Tests", created_by from problems where id = ?"#,
+		r#"select tests as "tests: Tests", created_by, visible as "visible: bool" from problems where id = ?"#,
 		problem_id,
 	)
 	.fetch_optional(&state.database)
@@ -148,7 +175,9 @@ async fn download_cases(
 		return Err(error::not_found(user.as_ref()).await);
 	};
 
-	if !can_edit(user.as_ref(), problem.created_by) {
+	if permission_level(user.as_ref(), problem.created_by, problem.visible)
+		< ProblemPermissionLevel::Edit
+	{
 		return Err(error::fake_not_found(user.as_ref()).await);
 	}
 
@@ -192,7 +221,7 @@ async fn handle_post(
 	user: Option<&User>,
 	problem_id: ProblemId,
 	post: &Post,
-) -> Result<SubmissionId, ErrorResponse> {
+) -> Result<Response, ErrorResponse> {
 	let Some(user) = user else {
 		return Err(ErrorResponse {
 			status: StatusCode::UNAUTHORIZED,
@@ -203,7 +232,7 @@ async fn handle_post(
 	let now = now();
 	let submission_id = query_scalar!("insert into submissions (code, for_problem, submitter, language, submission_time, result) values (?, ?, ?, ?, ?, null) returning id", post.code, problem_id, user.id, post.language, now).fetch_one(&state.database).await.map_err(ErrorResponse::sqlx)?;
 
-	Ok(submission_id)
+	crate::routes::submissions::do_judge(state, submission_id).await
 }
 
 async fn handler(
@@ -214,12 +243,7 @@ async fn handler(
 ) -> Result<Response, Response> {
 	let error = if let Some(extract::Form(post)) = post {
 		match handle_post(&state, user.as_ref(), problem_id, &post).await {
-			Ok(submission_id) => {
-				match crate::routes::submissions::do_judge(&state, submission_id).await {
-					Ok(response) => return Ok(response),
-					Err(error) => Some(error),
-				}
-			}
+			Ok(response) => return Ok(response),
 			Err(error) => Some(error),
 		}
 	} else {
@@ -228,7 +252,7 @@ async fn handler(
 
 	let user_id = user.as_ref().map(|user| user.id);
 	let Some(problem) = query!(
-		r#"select name, description, problems.creation_time as "creation_time: Timestamp", users.id as "created_by_id?", users.display_name as "created_by_name?", (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", (select count(*) > 0 from submissions where for_problem = problems.id and submitter = ?1 and result like 'o%') as "user_solved!: bool", tests as "tests: Tests" from problems left join users on problems.created_by = users.id where problems.id = ?2"#,
+		r#"select name, description, problems.creation_time as "creation_time: Timestamp", users.id as "created_by_id?", users.display_name as "created_by_name?", (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", (select count(*) > 0 from submissions where for_problem = problems.id and submitter = ?1 and result like 'o%') as "user_solved!: bool", tests as "tests: Tests", visible as "visible: bool" from problems left join users on problems.created_by = users.id where problems.id = ?2"#,
 		user_id,
 		problem_id,
 	)
@@ -239,12 +263,17 @@ async fn handler(
 		return Err(error::not_found(user.as_ref()).await);
 	};
 
+	let permission_level = permission_level(user.as_ref(), problem.created_by_id, problem.visible);
+	if permission_level < ProblemPermissionLevel::View {
+		return Err(error::not_found(user.as_ref()).await);
+	}
+
 	let (sample_input, sample_output) = problem.tests.cases().next().unwrap();
 
 	let pass_rate = pass_rate(problem.num_submissions, problem.num_correct_submissions);
 
 	let body = html! {
-		@if can_edit(user.as_ref(), problem.created_by_id) {
+		@if permission_level >= ProblemPermissionLevel::Edit {
 			div.row {
 				a href={"/problem/"(problem_id)"/edit"} { "Edit" }
 				form method="post" action={"/problem/"(problem_id)"/delete"} { input type="submit" value="Delete"; }
