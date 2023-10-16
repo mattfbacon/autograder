@@ -79,6 +79,9 @@ SystemCallArchitectures=native
 SystemCallFilter=@system-service ~@privileged ~@resources
 RestrictSUIDSGID=yes
 PrivateUsers=yes
+# This will cause the following message to be printed:
+# WARNING: Error loading config file: /home/autograder/.docker/config.json: open /home/autograder/.docker/config.json: permission denied
+# This is harmless.
 ProtectHome=yes
 PrivateNetwork=no
 
