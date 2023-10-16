@@ -99,8 +99,8 @@ async fn main() {
 
 	let app = axum::Router::new()
 		.merge(routes::router().layer(error::method_not_allowed_layer()))
-		.route_layer(auth::layer(Arc::clone(&state)))
 		.fallback(error::not_found_handler)
+		.layer(auth::layer(Arc::clone(&state)))
 		.with_state(state)
 		.nest("/res", resources());
 
