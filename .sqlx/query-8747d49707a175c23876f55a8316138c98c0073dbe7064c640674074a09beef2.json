@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into users (username, display_name, email, password, creation_time, permission_level) values (?, ?, ?, '', ?, ?) returning id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8747d49707a175c23876f55a8316138c98c0073dbe7064c640674074a09beef2"
+}

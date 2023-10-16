@@ -6,7 +6,7 @@ use axum::response::{IntoResponse, Redirect, Response};
 use axum::routing::get;
 use maud::html;
 use serde::Deserialize;
-use sqlx::query;
+use sqlx::{query, query_scalar};
 
 use crate::error::ErrorResponse;
 use crate::extract::auth::User;
@@ -15,17 +15,20 @@ use crate::extract::return_to::ReturnTo;
 use crate::model::PermissionLevel;
 use crate::template::{page, BannerKind};
 use crate::time::now;
+use crate::util::deserialize_non_empty;
 use crate::State;
 
 #[derive(Deserialize)]
 struct Form {
 	username: String,
 	display_name: String,
+	#[serde(default)]
+	#[serde(deserialize_with = "deserialize_non_empty")]
 	email: Option<String>,
 	password: String,
 }
 
-async fn handle_post(state: &State, mut request: Form) -> Result<(), ErrorResponse> {
+async fn handle_post(state: &State, request: &Form) -> Result<(), ErrorResponse> {
 	// We do this now because password hashing is a bit computationally intensive.
 	// If this were the only check, it would be prone to race conditions, but it's not.
 	let user = query!("select id from users where username = ?", request.username)
@@ -37,19 +40,25 @@ async fn handle_post(state: &State, mut request: Form) -> Result<(), ErrorRespon
 		return Err(ErrorResponse::bad_request("The username is already taken."));
 	}
 
-	request.email = request.email.filter(|s| !s.is_empty());
-
-	let password_hash = crate::password::hash(&request.password);
 	let creation_time = now();
 	let permission_level = PermissionLevel::default();
-	query!(
-		"insert into users (username, display_name, email, password, creation_time, permission_level) values (?, ?, ?, ?, ?, ?)",
+	let id = query_scalar!(
+		"insert into users (username, display_name, email, password, creation_time, permission_level) values (?, ?, ?, '', ?, ?) returning id",
 		request.username,
 		request.display_name,
 		request.email,
-		password_hash,
 		creation_time,
 		permission_level,
+	)
+	.fetch_one(&state.database)
+	.await
+	.map_err(ErrorResponse::sqlx)?;
+
+	let password_hash = crate::password::hash(&request.password);
+	query!(
+		"update users set password = ? where id = ?",
+		password_hash,
+		id,
 	)
 	.execute(&state.database)
 	.await
@@ -64,7 +73,9 @@ async fn handler(
 	extract::Query(return_to): extract::Query<ReturnTo>,
 	IfPost(post): IfPost<extract::Form<Form>>,
 ) -> Response {
-	let error = if let Some(extract::Form(post)) = post {
+	let post = post.map(|extract::Form(post)| post);
+	let post = post.as_ref();
+	let error = if let Some(post) = post {
 		match handle_post(&state, post).await {
 			Ok(()) => return Redirect::to(&return_to.add_to_path("/log-in")).into_response(),
 			Err(error) => Some(error),
@@ -76,10 +87,10 @@ async fn handler(
 	let status = error.as_ref().map_or(StatusCode::OK, |error| error.status);
 	let body = html! {
 		form method="post" {
-			label { "Username" input name="username" type="text" required; }
-			label { "Display name" input name="display_name" type="text" required; }
-			label { "Email (optional, for password reset)" input name="email" type="email"; }
-			label { "Password" input name="password" type="password" autocomplete="new-password" required; }
+			label { "Username" input name="username" type="text" value=[post.map(|post| &post.username)] required; }
+			label { "Display name" input name="display_name" type="text" value=[post.map(|post| &post.display_name)] required; }
+			label { "Email (optional, for password reset)" input name="email" value=[post.and_then(|post| post.email.as_deref())] type="email"; }
+			label { "Password" input name="password" type="password" autocomplete="new-password" value=[post.map(|post| &post.password)] required; }
 			input type="submit" value="Register";
 		}
 		a href=(return_to.add_to_path("/log-in")) { "Or log in" }
