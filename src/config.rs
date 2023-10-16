@@ -19,11 +19,12 @@ pub struct Smtp {
 }
 
 impl Smtp {
+	#[allow(clippy::match_same_arms /* Separate default case. */)]
 	pub fn implicit_tls(&self) -> bool {
-		self.implicit_tls.unwrap_or_else(|| match self.port {
+		self.implicit_tls.unwrap_or(match self.port {
 			465 => true,
 			25 | 587 => false,
-			// Default
+			// Default.
 			_ => false,
 		})
 	}
