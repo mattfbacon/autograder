@@ -259,10 +259,7 @@ pub fn layer(
 	Route,
 	Service = impl Service<Request<Body>, Response = Response, Future = impl Send, Error = Infallible> + Clone,
 > + Clone {
-	axum::middleware::from_fn_with_state::<_, _, (extract::State<Arc<State>>, Request<Body>)>(
-		state,
-		layer_inner,
-	)
+	axum::middleware::from_fn_with_state(state, layer_inner)
 }
 
 #[async_trait]
