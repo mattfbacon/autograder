@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "select count(*) as \"count: i64\" from problems inner join users as creator on problems.created_by = creator.id where (?1 or visible = 1) and (?2 is null or instr(problems.name, ?2) > 0) and (?3 is null or instr(creator.display_name, ?3) > 0) and (?4 is null or creator.id = ?4) and (?5 is null or (select 1 from submissions inner join users as submitter on submissions.submitter = submitter.id where for_problem = problems.id and instr(submitter.display_name, ?5) > 0 and result like 'o%') is not null) and (?6 is null or (select 1 from submissions where for_problem = problems.id and submitter = ?6 and result like 'o%') is not null)",
+  "describe": {
+    "columns": [
+      {
+        "name": "count: i64",
+        "ordinal": 0,
+        "type_info": "Int"
+      }
+    ],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e2ed8dad245cba8a3b3dd50ce363d72c13841d0fdb1a5f388a837b85c1dd1fba"
+}

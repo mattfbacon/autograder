@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "select problems.id as \"id!\", name, (select count(*) from submissions where for_problem = problems.id) as \"num_submissions!: i64\", visible as \"visible: bool\", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as \"num_correct_submissions!: i64\", (select 1 from submissions where for_problem = problems.id and submitter = ?3 and result like 'o%') is not null as \"user_solved!: bool\", creator.id as \"created_by_id!\", creator.display_name as created_by_name from problems inner join users as creator on problems.created_by = creator.id where (?4 or visible = 1) and (?5 is null or instr(problems.name, ?5) > 0) and (?6 is null or instr(creator.display_name, ?6) > 0) and (?7 is null or creator.id = ?7) and (?8 is null or (select 1 from submissions inner join users as submitter on submissions.submitter = submitter.id where for_problem = problems.id and instr(submitter.display_name, ?8) and result like 'o%') is not null) and (?9 is null or (select 1 from submissions where for_problem = problems.id and submitter = ?9 and result like 'o%') is not null) order by problems.id limit ?1 offset ?2",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "num_submissions!: i64",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "visible: bool",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "num_correct_submissions!: i64",
+        "ordinal": 4,
+        "type_info": "Null"
+      },
+      {
+        "name": "user_solved!: bool",
+        "ordinal": 5,
+        "type_info": "Null"
+      },
+      {
+        "name": "created_by_id!",
+        "ordinal": 6,
+        "type_info": "Int64"
+      },
+      {
+        "name": "created_by_name",
+        "ordinal": 7,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": [
+      true,
+      false,
+      null,
+      false,
+      null,
+      null,
+      true,
+      false
+    ]
+  },
+  "hash": "31e8bdfbfc7adf049979309a67b2bb23b1cef647078309c07ef8f0ac2dc6705a"
+}

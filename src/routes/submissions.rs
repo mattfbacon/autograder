@@ -15,7 +15,7 @@ use crate::model::{
 use crate::sandbox::{Test, TestResponse};
 use crate::template::page;
 use crate::time::{now, Timestamp};
-use crate::util::encode_query;
+use crate::util::search_query;
 use crate::{error, State};
 
 pub async fn do_judge(
@@ -223,46 +223,12 @@ async fn handler(
 
 const DEFAULT_PAGE_SIZE: u32 = 30;
 
-macro_rules! search_query {
-	($($name:ident: $ty:ty,)*) => {
-		#[derive(serde::Deserialize)]
-		struct SubmissionsSearch {
-			$(
-				#[serde(default)]
-				#[serde(deserialize_with = "crate::util::deserialize_non_empty")]
-				$name: Option<$ty>,
-			)*
-		}
-
-		impl SubmissionsSearch {
-			fn any_set(&self) -> bool {
-				$(self.$name.is_some())||*
-			}
-
-			fn to_query(&self) -> impl std::fmt::Display + '_ {
-				struct Helper<'a>(&'a SubmissionsSearch);
-
-				impl std::fmt::Display for Helper<'_> {
-					fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-						$(if let Some($name) = &self.0.$name {
-							write!(formatter, concat!("&", stringify!($name), "={}"), encode_query($name.to_string().as_bytes()))?;
-						})*
-						Ok(())
-					}
-				}
-
-				Helper(self)
-			}
-		}
-	};
-}
-
-search_query! {
+search_query! { struct SubmissionsSearch {
 	submitter: String,
 	submitter_id: UserId,
 	problem: String,
 	problem_id: ProblemId,
-}
+} }
 
 async fn submissions(
 	extract::State(state): extract::State<Arc<State>>,

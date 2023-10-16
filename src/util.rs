@@ -234,3 +234,38 @@ where
 		raw.parse().map_err(serde::de::Error::custom).map(Some)
 	}
 }
+
+macro_rules! search_query {
+	($vis:vis struct $struct_name:ident { $($name:ident: $ty:ty,)* }) => {
+		#[derive(serde::Deserialize)]
+		$vis struct $struct_name {
+			$(
+				#[serde(default)]
+				#[serde(deserialize_with = "crate::util::deserialize_non_empty")]
+				$name: Option<$ty>,
+			)*
+		}
+
+		impl $struct_name {
+			fn any_set(&self) -> bool {
+				$(self.$name.is_some())||*
+			}
+
+			fn to_query(&self) -> impl std::fmt::Display + '_ {
+				struct Helper<'a>(&'a $struct_name);
+
+				impl std::fmt::Display for Helper<'_> {
+					fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+						$(if let Some($name) = &self.0.$name {
+							write!(formatter, concat!("&", stringify!($name), "={}"), $crate::util::encode_query($name.to_string().as_bytes()))?;
+						})*
+						Ok(())
+					}
+				}
+
+				Helper(self)
+			}
+		}
+	};
+}
+pub(crate) use search_query;
