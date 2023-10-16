@@ -83,6 +83,15 @@ async fn main() {
 		.expect("running migrations");
 
 	tokio::spawn(clear_expired_tokens(database.clone()));
+	tokio::spawn({
+		let database = database.clone();
+		async move {
+			loop {
+				_ = query("pragma optimize").execute(&database).await;
+				tokio::time::sleep(std::time::Duration::from_secs(60 * 60 * 12)).await;
+			}
+		}
+	});
 
 	let sandbox = sandbox::Sandbox::new().await;
 
