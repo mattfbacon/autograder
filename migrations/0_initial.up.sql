@@ -3,7 +3,8 @@
 create table problems (
 	id integer primary key,
 	name text not null constraint problems_name_not_empty check (name != '') constraint problems_name check (name not regexp '[\x01-\x1f\x80-\x9f]'),
-	description text not null constraint problems_description check (description not regexp '[\x01-\x1f\x80-\x9f]'),
+	-- This regex specifically permits newlines and tabs.
+	description text not null constraint problems_description check (description not regexp '[\x01-\x08\x0b-\x1f\x80-\x9f]'),
 	time_limit integer not null,
 	visible integer not null,
 	tests text not null,
