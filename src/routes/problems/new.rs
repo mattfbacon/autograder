@@ -55,8 +55,8 @@ const EXAMPLE_CUSTOM_JUDGER: &str = "\
 # i: case index, zero-indexed.
 # case_input, expected_output, actual_output: trimmed and normalized to unix newlines.
 def judge(i: int, case_input: str, expected_output: str, actual_output: str) -> bool:
-	# This is equivalent to the default judger:
-	return actual_output == expected_output
+  # This is equivalent to the default judger:
+  return actual_output == expected_output
 ";
 
 async fn handle_post(
