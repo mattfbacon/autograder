@@ -252,7 +252,7 @@ async fn handler(
 
 	let user_id = user.as_ref().map(|user| user.id);
 	let Some(problem) = query!(
-		r#"select name, description, problems.creation_time as "creation_time: Timestamp", users.id as "created_by_id?", users.display_name as "created_by_name?", (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", (select count(*) > 0 from submissions where for_problem = problems.id and submitter = ?1 and result like 'o%') as "user_solved!: bool", tests as "tests: Tests", visible as "visible: bool" from problems left join users on problems.created_by = users.id where problems.id = ?2"#,
+		r#"select name, description, problems.creation_time as "creation_time: Timestamp", time_limit, users.id as "created_by_id?", users.display_name as "created_by_name?", (select count(*) from submissions where for_problem = problems.id) as "num_submissions!: i64", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as "num_correct_submissions!: i64", (select count(*) > 0 from submissions where for_problem = problems.id and submitter = ?1 and result like 'o%') as "user_solved!: bool", tests as "tests: Tests", visible as "visible: bool" from problems left join users on problems.created_by = users.id where problems.id = ?2"#,
 		user_id,
 		problem_id,
 	)
@@ -296,6 +296,7 @@ async fn handler(
 			@if let Some(pass_rate) = pass_rate {
 				", " (pass_rate) "% correct"
 			}
+			" | Time limit: " (problem.time_limit) " ms"
 		} }
 		p { (problem.description) }
 		div.sample-io {

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "select name, description, problems.creation_time as \"creation_time: Timestamp\", users.id as \"created_by_id?\", users.display_name as \"created_by_name?\", (select count(*) from submissions where for_problem = problems.id) as \"num_submissions!: i64\", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as \"num_correct_submissions!: i64\", (select count(*) > 0 from submissions where for_problem = problems.id and submitter = ?1 and result like 'o%') as \"user_solved!: bool\", tests as \"tests: Tests\", visible as \"visible: bool\" from problems left join users on problems.created_by = users.id where problems.id = ?2",
+  "query": "select name, description, problems.creation_time as \"creation_time: Timestamp\", time_limit, users.id as \"created_by_id?\", users.display_name as \"created_by_name?\", (select count(*) from submissions where for_problem = problems.id) as \"num_submissions!: i64\", (select count(*) from submissions where for_problem = problems.id and result like 'o%') as \"num_correct_submissions!: i64\", (select count(*) > 0 from submissions where for_problem = problems.id and submitter = ?1 and result like 'o%') as \"user_solved!: bool\", tests as \"tests: Tests\", visible as \"visible: bool\" from problems left join users on problems.created_by = users.id where problems.id = ?2",
   "describe": {
     "columns": [
       {
@@ -19,38 +19,43 @@
         "type_info": "Int64"
       },
       {
-        "name": "created_by_id?",
+        "name": "time_limit",
         "ordinal": 3,
         "type_info": "Int64"
       },
       {
-        "name": "created_by_name?",
+        "name": "created_by_id?",
         "ordinal": 4,
+        "type_info": "Int64"
+      },
+      {
+        "name": "created_by_name?",
+        "ordinal": 5,
         "type_info": "Text"
       },
       {
         "name": "num_submissions!: i64",
-        "ordinal": 5,
-        "type_info": "Null"
-      },
-      {
-        "name": "num_correct_submissions!: i64",
         "ordinal": 6,
         "type_info": "Null"
       },
       {
-        "name": "user_solved!: bool",
+        "name": "num_correct_submissions!: i64",
         "ordinal": 7,
         "type_info": "Null"
       },
       {
-        "name": "tests: Tests",
+        "name": "user_solved!: bool",
         "ordinal": 8,
+        "type_info": "Null"
+      },
+      {
+        "name": "tests: Tests",
+        "ordinal": 9,
         "type_info": "Text"
       },
       {
         "name": "visible: bool",
-        "ordinal": 9,
+        "ordinal": 10,
         "type_info": "Int64"
       }
     ],
@@ -58,6 +63,7 @@
       "Right": 2
     },
     "nullable": [
+      false,
       false,
       false,
       false,
@@ -70,5 +76,5 @@
       false
     ]
   },
-  "hash": "51871e027d5857ae5e6e8770bddaf06702625f1046e7c14af33501ef6dcaeabe"
+  "hash": "44d93b402acff36fbdf49fe51de328506682a883d14b9111d831239e793a245f"
 }
