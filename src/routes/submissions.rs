@@ -152,7 +152,8 @@ async fn delete(
 		.execute(&state.database)
 		.await
 		.map_err(error::sqlx(user.as_ref()))?;
-	Ok(Redirect::to(&format!("/problem/{}", submission.for_problem)).into_response())
+	let go_to = format!("/submissions?problem_id={}", submission.for_problem);
+	Ok(Redirect::to(&go_to).into_response())
 }
 
 async fn handler(
