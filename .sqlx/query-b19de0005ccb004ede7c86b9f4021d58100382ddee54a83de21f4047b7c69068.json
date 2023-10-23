@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "select id as \"id!\", display_name, email, remove_email_key, password_reset_expiration as \"password_reset_expiration: Timestamp\", creation_time as \"creation_time: Timestamp\", (select 1 from submissions where submitter = users.id and result like 'o%' limit 1) is not null as \"at_least_one_correct_submission!: bool\" from users where username = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "display_name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "remove_email_key",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "password_reset_expiration: Timestamp",
+        "ordinal": 4,
+        "type_info": "Int64"
+      },
+      {
+        "name": "creation_time: Timestamp",
+        "ordinal": 5,
+        "type_info": "Int64"
+      },
+      {
+        "name": "at_least_one_correct_submission!: bool",
+        "ordinal": 6,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "b19de0005ccb004ede7c86b9f4021d58100382ddee54a83de21f4047b7c69068"
+}

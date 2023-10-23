@@ -15,7 +15,7 @@ use crate::extract::auth::User;
 use crate::extract::if_post::IfPost;
 use crate::model::UserId;
 use crate::template::{page, BannerKind};
-use crate::time::{minutes, now, Timestamp};
+use crate::time::{hours, minutes, now, Timestamp};
 use crate::State;
 
 type Key = i64;
@@ -118,7 +118,7 @@ async fn handle_post(state: &State, post: Form) -> Result<(), ErrorResponse> {
 	let smtp = &crate::CONFIG.smtp;
 
 	let user = query!(
-		r#"select id as "id!", display_name, email, remove_email_key, password_reset_expiration as "password_reset_expiration: Timestamp" from users where username = ?"#,
+		r#"select id as "id!", display_name, email, remove_email_key, password_reset_expiration as "password_reset_expiration: Timestamp", creation_time as "creation_time: Timestamp", (select 1 from submissions where submitter = users.id and result like 'o%' limit 1) is not null as "at_least_one_correct_submission!: bool" from users where username = ?"#,
 		post.username,
 	)
 	.fetch_optional(&state.database)
@@ -131,6 +131,10 @@ async fn handle_post(state: &State, post: Form) -> Result<(), ErrorResponse> {
 	let Some(user_email) = user.email else {
 		return Ok(());
 	};
+
+	if (now() - user.creation_time) < hours(24) || !user.at_least_one_correct_submission {
+		return Ok(());
+	}
 
 	if user
 		.password_reset_expiration
@@ -207,6 +211,7 @@ async fn handler(
 			label { "Username" input type="text" name="username" required; }
 			input type="submit" value="Send";
 		}
+		p { "Note that you can only perform a password reset if the account has existed for at least a day and has made at least one correct submission." }
 	};
 
 	let mut page = page("Reset Password", login_user.as_ref(), &body);
