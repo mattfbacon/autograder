@@ -45,7 +45,7 @@ async fn users(
 			} }
 			tbody { @for user in &users { tr {
 				td { (user.id) }
-				td { a href={"/users/"(user.id)} { (user.username) } }
+				td { a href={"/user/"(user.id)} { (user.username) } }
 				td { (user.display_name) }
 				td { (user.creation_time) }
 				td { (user.permission_level.name()) }

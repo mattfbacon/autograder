@@ -287,7 +287,7 @@ async fn handler(
 			"Created "
 			@if let Some(created_by_id) = problem.created_by_id {
 				@if let Some(created_by_name) = &problem.created_by_name {
-					"by " a href={"/users/"(created_by_id)} { (created_by_name) } " "
+					"by " a href={"/user/"(created_by_id)} { (created_by_name) } " "
 				}
 			}
 			"on " (problem.creation_time)

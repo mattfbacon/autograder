@@ -57,17 +57,17 @@ async fn main_page(
 		@if permission_level >= UserEditPermissionLevel::Edit {
 			hr;
 			h2 { "Change display name" }
-			form method="post" action={"/users/"(req_user_id)"/rename"} {
+			form method="post" action={"/user/"(req_user_id)"/rename"} {
 				label { "New display name" input type="text" name="display_name" required value=(req_user.display_name); }
 				input type="submit" value="Rename";
 			}
 			h2 { "Change email" }
-			form method="post" action={"/users/"(req_user_id)"/email"} {
+			form method="post" action={"/user/"(req_user_id)"/email"} {
 				label { "New email (empty for no email)" input type="text" name="email" value=[req_user.email]; }
 				input type="submit" value="Change";
 			}
 			h2 { "Change password" }
-			form method="post" action={"/users/"(req_user_id)"/password"} {
+			form method="post" action={"/user/"(req_user_id)"/password"} {
 				input type="password" autocomplete="new-password" name="password" required;
 				input type="submit" value="Change";
 			}
@@ -76,7 +76,7 @@ async fn main_page(
 				@if login_user.is_some_and(|login_user| login_user.id == req_user_id) {
 					p { "Be careful changing your own access, or you may lock yourself out." }
 				}
-				form method="post" action={"/users/"(req_user_id)"/permission"} {
+				form method="post" action={"/user/"(req_user_id)"/permission"} {
 					label { "New permission level" select name="permission_level" required {
 						@for &level in PermissionLevel::ALL {
 							option value=(level.repr()) selected[level == req_user.permission_level] { (level.name()) }
@@ -86,7 +86,7 @@ async fn main_page(
 				}
 			}
 			h2 { "Delete" }
-			form method="post" action={"/users/"(req_user_id)"/delete"} {
+			form method="post" action={"/user/"(req_user_id)"/delete"} {
 				input type="submit" value="Delete";
 			}
 		}
@@ -270,5 +270,5 @@ pub fn router() -> axum::Router<Arc<State>> {
 		.route("/password", post(change_password).get(handler))
 		.route("/permission", post(change_permission).get(handler))
 		.route("/rename", post(rename).get(handler));
-	axum::Router::new().nest("/users/:id", router)
+	axum::Router::new().nest("/user/:id", router)
 }
