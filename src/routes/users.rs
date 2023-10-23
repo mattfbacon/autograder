@@ -130,7 +130,7 @@ async fn change_email(
 	extract::Path(req_user_id): extract::Path<UserId>,
 	extract::Form(post): extract::Form<ChangeEmailForm>,
 ) -> Result<Response, Response> {
-	if permission_level(login_user.as_ref(), req_user_id) < UserEditPermissionLevel::Admin {
+	if permission_level(login_user.as_ref(), req_user_id) < UserEditPermissionLevel::Edit {
 		return Err(error::fake_not_found(login_user.as_ref()).await);
 	}
 
