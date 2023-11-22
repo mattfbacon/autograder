@@ -272,6 +272,28 @@ async fn handler(
 
 	let pass_rate = pass_rate(problem.num_submissions, problem.num_correct_submissions);
 
+	let md_options = comrak::Options {
+		extension: comrak::ExtensionOptionsBuilder::default()
+			.strikethrough(true)
+			.table(true)
+			.autolink(true)
+			.tasklist(true)
+			.superscript(true)
+			.footnotes(true)
+			.description_lists(true)
+			.shortcodes(true)
+			.build()
+			.unwrap(),
+		parse: comrak::ParseOptionsBuilder::default()
+			.smart(true)
+			.build()
+			.unwrap(),
+		render: comrak::RenderOptionsBuilder::default()
+			.escape(true)
+			.build()
+			.unwrap(),
+	};
+
 	let body = html! {
 		@if permission_level >= ProblemPermissionLevel::Edit {
 			div.row {
@@ -298,7 +320,7 @@ async fn handler(
 			}
 			" | Time limit: " (problem.time_limit) " ms"
 		} }
-		p { (problem.description) }
+		div.description { (maud::PreEscaped(comrak::markdown_to_html(&problem.description, &md_options))) }
 		div.sample-io {
 			h2 { "Sample input" }
 			pre { code { (sample_input) } }

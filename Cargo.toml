@@ -17,6 +17,7 @@ bcrypt = "0.15"
 bindable = "0.1"
 bytes = "1"
 ciborium = "0.2"
+comrak = { version = "0.19", default-features = false, features = ["shortcodes"] }
 cookie = { version = "0.17", features = ["percent-encode"] }
 futures-util = "0.3"
 hex = "0.4"
