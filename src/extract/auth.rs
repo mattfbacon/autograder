@@ -36,7 +36,7 @@ impl Token {
 
 	// Don't want to copy around this large array when there's no reason to.
 	#[allow(clippy::wrong_self_convention)]
-	#[allow(clippy::needless_borrow)]
+	#[allow(clippy::needless_borrows_for_generic_args)]
 	pub fn to_cookie(&self) -> Cookie<'static> {
 		let encoded = hex::encode(&self.0);
 		Cookie::build(COOKIE_NAME, encoded)
