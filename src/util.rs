@@ -105,7 +105,7 @@ macro_rules! db_enum {
 		}
 
 		impl $name {
-			$vis const ALL: &[Self] = &[$(Self::$item,)*];
+			$vis const ALL: &'static [Self] = &[$(Self::$item,)*];
 
 			$vis fn from_repr(repr: i64) -> Option<Self> {
 				Some(match repr {
